@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tasty Burger</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      background: #fff7e8;
+      font-family: system-ui, sans-serif;
+    }
+    main { width: min(92vw, 560px); text-align: center; }
+    svg { display: block; width: 100%; height: auto; }
+    h1 { margin: 0 0 1rem; color: #713b1c; font-size: clamp(1.5rem, 5vw, 2.25rem); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>A tasty burger</h1>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" role="img" aria-labelledby="burger-title burger-description">
+      <title id="burger-title">A tasty burger</title>
+      <desc id="burger-description">A cheerful illustrated hamburger with a sesame bun, lettuce, tomato, cheese, and a grilled patty.</desc>
+      <ellipse cx="240" cy="316" rx="174" ry="17" fill="#e9d8bb"/>
+
+      <!-- Top bun -->
+      <path d="M75 175C75 104 149 53 240 53s165 51 165 122v14H75z" fill="#eaa344" stroke="#9c531f" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M91 166c5-54 66-94 149-94s144 40 149 94" fill="none" stroke="#f8c56d" stroke-width="12" stroke-linecap="round"/>
+      <g fill="#fff0bd">
+        <ellipse cx="150" cy="115" rx="5" ry="9" transform="rotate(-35 150 115)"/>
+        <ellipse cx="198" cy="91" rx="5" ry="9" transform="rotate(-12 198 91)"/>
+        <ellipse cx="252" cy="88" rx="5" ry="9" transform="rotate(12 252 88)"/>
+        <ellipse cx="306" cy="105" rx="5" ry="9" transform="rotate(30 306 105)"/>
+        <ellipse cx="344" cy="139" rx="5" ry="9" transform="rotate(42 344 139)"/>
+        <ellipse cx="116" cy="145" rx="5" ry="9" transform="rotate(-48 116 145)"/>
+        <ellipse cx="228" cy="128" rx="5" ry="9"/>
+        <ellipse cx="285" cy="135" rx="5" ry="9" transform="rotate(20 285 135)"/>
+      </g>
+
+      <!-- Lettuce -->
+      <path d="M78 187q15-20 30 0 15-22 31 0 16-20 32 0 16-22 32 0 16-20 32 0 16-22 32 0 16-20 32 0 16-22 32 0 16-20 32 0 16-22 32 0 16-20 32 0v24H78z" fill="#78a843" stroke="#416c2d" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M95 199q15 9 29 0m26 0q15 9 29 0m27 0q15 9 29 0m27 0q15 9 29 0m27 0q15 9 29 0m27 0q12 8 24 0" fill="none" stroke="#b5d46d" stroke-width="5" stroke-linecap="round"/>
+
+      <!-- Tomato -->
+      <path d="M95 222h290v31H95z" fill="#e65d42" stroke="#a73b2d" stroke-width="6"/>
+      <path d="M111 228h258" stroke="#f38a68" stroke-width="6" stroke-linecap="round"/>
+
+      <!-- Cheese -->
+      <path d="M94 248h292l-42 39-41-22-44 27-44-25-49 20-72-24z" fill="#f3c845" stroke="#b27c22" stroke-width="6" stroke-linejoin="round"/>
+
+      <!-- Patty -->
+      <path d="M88 276q0-14 17-14h270q17 0 17 14v20q0 17-18 17H106q-18 0-18-17z" fill="#824329" stroke="#512a21" stroke-width="7"/>
+      <path d="M114 285h252m-230 17h205" fill="none" stroke="#a9633e" stroke-width="6" stroke-linecap="round"/>
+
+      <!-- Bottom bun -->
+      <path d="M91 309h298v7q0 22-24 22H115q-24 0-24-22z" fill="#eaa344" stroke="#9c531f" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M117 323h246" stroke="#f8c56d" stroke-width="6" stroke-linecap="round"/>
+    </svg>
+  </main>
+</body>
+</html>
