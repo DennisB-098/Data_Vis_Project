@@ -1,0 +1,373 @@
+/* --- GLOBAL STYLES & FULL SCREEN --- */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #e2ebf0;
+    /* This pattern is now the background for the whole screen */
+    background-image: radial-gradient(#b0c4cd 1.5px, transparent 1.5px);
+    background-size: 20px 20px;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    /* Prevents scrollbars */
+}
+
+/* Container takes up the whole screen */
+.presentation-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* --- SLIDE LOGIC (Hiding/Showing) --- */
+.slide {
+    display: none;
+    /* Hides all slides */
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.slide.active {
+    display: flex;
+    /* Shows the active slide */
+    flex-direction: column;
+}
+
+/* --- NAVIGATION BAR --- */
+.navbar {
+    background-color: #284b68;
+    color: white;
+    padding: 15px 40px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 30px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+}
+
+.navbar a:hover {
+    text-decoration: underline;
+}
+
+/* --- SLIDE 1: TITLE PAGE --- */
+#slide-1,
+.slide:nth-child(1) {
+    background-color: #b8ccd4;
+}
+
+.title-content {
+    padding: 0 10vw;
+    /* Uses viewport width so it scales on big screens */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+.title-content h1 {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: #3b5668;
+    /* Font size scales with screen size */
+    font-size: clamp(3rem, 6vw, 7rem);
+    line-height: 1.1;
+    margin: 0 0 40px 0;
+    max-width: 70%;
+}
+
+/* The beige blob (Placeholder for map) */
+.map-shape {
+    position: absolute;
+    right: 5vw;
+    top: 50%;
+    transform: translateY(-50%);
+    /* Scales with screen */
+    width: 45vw;
+    height: 45vw;
+    background-color: #eaddcc;
+    border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+    z-index: -1;
+    opacity: 0.8;
+}
+
+/* --- SLIDE 2: BACKGROUND PAGE --- */
+.slide:nth-child(2) {
+    background-color: #a4b8c0;
+}
+
+.split-content {
+    display: flex;
+    padding: 5vw;
+    gap: 5vw;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-side {
+    flex: 1;
+    max-width: 50%;
+}
+
+.image-side img {
+    width: 100%;
+    height: 60vh;
+    object-fit: cover;
+    /* Ensures image doesn't stretch weirdly on big screens */
+    border-radius: 8px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    filter: grayscale(100%);
+}
+
+.text-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.text-side h2 {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: #3b5668;
+    font-size: clamp(2rem, 4vw, 4rem);
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.text-side p {
+    color: #3b5668;
+    line-height: 1.6;
+    font-size: clamp(1rem, 1.5vw, 1.5rem);
+    margin-bottom: 40px;
+}
+
+/* --- BUTTONS --- */
+.btn {
+    background-color: #cfc1b1;
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 30px;
+    cursor: pointer;
+    width: fit-content;
+    transition: background-color 0.2s, transform 0.1s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+    background-color: #b5a796;
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+#slide-chart {
+    background-color: #b8ccd4;
+}
+
+.chart-page-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 2.5vh 6vw 4vh 6vw;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.chart-header h2 {
+    color: #3b5668;
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    margin: 0 0 6px 0;
+}
+
+.chart-header .subtitle {
+    color: #3b5668;
+    margin: 0;
+    font-size: clamp(0.95rem, 1.2vw, 1.15rem);
+    opacity: 0.9;
+}
+
+.metric-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.metric-btn {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    background-color: #cfc1b1;
+    color: #3b5668;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.metric-btn:hover {
+    background-color: #b5a796;
+}
+
+.metric-btn.active {
+    background-color: #284b68;
+    color: #ffffff;
+}
+
+.chart-card {
+    flex-grow: 1;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.88);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(40, 75, 104, 0.15);
+    padding: 20px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.axis text {
+    fill: #3b5668;
+    font-size: 13px;
+}
+
+.axis path,
+.axis line {
+    stroke: #8fa6b3;
+}
+
+.grid line {
+    stroke: #dce5ea;
+    stroke-dasharray: 3, 3;
+}
+
+.grid path {
+    stroke-width: 0;
+}
+
+.tooltip {
+    position: absolute;
+    pointer-events: none;
+    background-color: #284b68;
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    box-shadow: 0 6px 15px #00000000;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 100;
+}
+body:has(#slide-chart) {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+body:has(#slide-chart) .presentation-container,
+body:has(#slide-chart) .slide {
+    height: auto;
+    min-height: 100vh;
+}
+
+#bar-chart-container {
+    height: 460px;
+    flex-grow: 0;
+}
+
+.table-card {
+    margin-top: 24px;
+    overflow-x: auto;
+    flex-grow: 0;
+}
+
+.table-title {
+    color: #3b5668;
+    font-size: 1.3rem;
+    margin: 0 0 15px 0;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    color: #3b5668;
+    text-align: left;
+}
+
+.data-table th {
+    background-color: #284b68;
+    color: #ffffff;
+    padding: 12px 16px;
+    font-weight: 600;
+}
+
+.data-table th:first-child {
+    border-top-left-radius: 6px;
+}
+
+.data-table th:last-child {
+    border-top-right-radius: 6px;
+}
+
+.data-table td {
+    padding: 11px 16px;
+    border-bottom: 1px solid #dce5ea;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: rgba(184, 204, 212, 0.25);
+}
+
+.data-table tbody tr:hover {
+    background-color: #C0CBCD;
+}
+
+.data-table th.num,
+.data-table td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.data-table td.active-col {
+    font-weight: bold;
+    color: #284b68;
+}
+.floating-next-btn {
+    position: fixed;
+    right: 35px;
+    bottom: 30px;
+    z-index: 999;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #b5a796; 
+    color: #ffffff;
+    box-shadow: 0 6px 18px #00000000;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.floating-next-btn:hover {
+    background-color: #a99580;
+    transform: translateY(-2px);
+}

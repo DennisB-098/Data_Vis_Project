@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counterparty crash configurations and average hospitalizations</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <div class="presentation-container">
+
+        <div class="slide active" id="slide-chart">
+            <div class="navbar">
+                <a href="index.html">Home Page</a>
+                <a href="about.html">About</a>
+                <a href="appendix.html">Appendix</a>
+            </div>
+            
+            <div class="chart-page-content">
+                <div class="chart-header">
+                    <div>
+                        <h2>Counterparty Crash Configurations and Average Hospitalizations</h2>
+                    </div>
+                    <div class="metric-controls">
+                        <button class="btn metric-btn active" data-metric="Average_Bed_Days">Avg Bed Days</button>
+                        <button class="btn metric-btn" data-metric="Sum(Count of cases)">Total Cases</button>
+                        <button class="btn metric-btn" data-metric="Sum(Bed days)">Total Bed Days</button>
+                    </div>
+                </div>
+
+                <div id="bar-chart-container" class="chart-card"></div>
+                <div id="data-table-container" class="chart-card table-card"></div>
+            </div>
+        </div>
+    </div>
+
+<a href="Q4.html" class="btn floating-next-btn">Next →</a>
+      </div>
+    <div id="chart-tooltip" class="tooltip"></div>
+    <script src="js/Q3chart.js"></script>
+</body>
+
+</html>
