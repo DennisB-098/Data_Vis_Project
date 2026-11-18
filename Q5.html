@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospitalisations and Average Hospital Stay by Age Group and Sex</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <div class="presentation-container">
+        <div class="slide active" id="slide-chart">
+            <div class="navbar">
+                <a href="index.html">Home Page</a>
+                <a href="about.html">About</a>
+                <a href="appendix.html">Appendix</a>
+            </div>
+
+            <main class="chart-page-content q5-chart-page">
+                <div class="chart-header">
+                    <div>
+                        <h2>Hospitalisations and Average Hospital Stay by Age Group and Sex</h2>
+                        <p class="subtitle">Male values extend left; female values extend right</p>
+                    </div>
+                    <div class="chart-controls">
+                        <label class="year-control" for="year-select">
+                            Calendar year
+                            <select id="year-select" aria-label="Select calendar year">
+                                <option value="All" selected>All</option>
+                                <option value="2011">2011</option>
+                                <option value="2012">2012</option>
+                                <option value="2013">2013</option>
+                                <option value="2014">2014</option>
+                                <option value="2015">2015</option>
+                                <option value="2016">2016</option>
+                                <option value="2017">2017</option>
+                                <option value="2018">2018</option>
+                                <option value="2019">2019</option>
+                                <option value="2020">2020</option>
+                                <option value="2021">2021</option>
+                            </select>
+                        </label>
+                        <div class="metric-controls" role="group" aria-label="Select chart metric">
+                            <button class="metric-btn active" type="button" data-metric="hospitalisations"
+                                aria-pressed="true">Hospitalisations</button>
+                            <button class="metric-btn" type="button" data-metric="averageHospitalStay"
+                                aria-pressed="false">Average Hospital Stay</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="butterfly-legend" aria-label="Chart legend">
+                    <span class="legend-item"><span class="legend-swatch legend-male"></span>Male</span>
+                    <span class="legend-item"><span class="legend-swatch legend-female"></span>Female</span>
+                </div>
+                <div id="butterfly-chart-container" class="chart-card" aria-live="polite"></div>
+            </main>
+        </div>
+    </div>
+
+    <a href="Q4.html" class="btn floating-next-btn">← Previous</a>
+    <div id="chart-tooltip" class="tooltip" role="status"></div>
+    <script src="js/Q5chart.js"></script>
+</body>
+
+</html>
