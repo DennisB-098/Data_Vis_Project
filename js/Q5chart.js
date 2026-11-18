@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         : formatStay(value);
 
     try {
+        // Parse once so year and metric changes can reuse the loaded rows.
         const sourceData = await d3.csv("data/question5.2data.csv", (d, index) => {
             const year = Number(d["Calendar year"]);
             const hospitalisations = Number(d["Sum(Hospitalisations)"]);
@@ -95,6 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ? sourceData
                 : sourceData.filter(d => d.year === Number(selectedYear));
 
+            // Pool annual average stays by hospitalization count for the All-years view.
             const totals = d3.rollup(
                 filtered,
                 rows => {
@@ -136,6 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const maxValue = d3.max(bars, d => d.value) || 0;
             const domainMax = maxValue > 0 ? maxValue : 1;
+            // A symmetric domain keeps male and female magnitudes directly comparable.
             xScale.domain([-domainMax, domainMax]).nice();
 
             const axis = d3.axisBottom(xScale)
@@ -177,6 +180,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 })
                 .on("mouseleave", () => tooltip.style("opacity", 0));
 
+            // Negative male values position bars to the left of the central zero line.
             const updateBars = selection => selection
                 .attr("x", d => xScale(d.sex === "male" ? -d.value : 0))
                 .attr("width", d => Math.abs(
@@ -202,6 +206,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         yearSelect.addEventListener("change", () => render(true));
         metricButtons.on("click", function () {
             selectedMetric = this.dataset.metric;
+            // Keep the visual selection and accessible pressed state in sync.
             metricButtons
                 .classed("active", function () {
                     return this.dataset.metric === selectedMetric;

@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("heatmap-container");
     const tooltip = d3.select("#chart-tooltip");
 
+    // Normalize the CSV fields once before building the heatmap.
     d3.csv("data/question4data.csv", d => ({
         ageGroup: d["Age group"],
         year: +d["Calendar year"],
@@ -46,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const minStay = d3.min(data, d => d.stay);
         const maxStay = d3.max(data, d => d.stay);
 
+        // Higher average stays map to darker reds.
         const colorScale = d3.scaleSequential()
             .domain([minStay, maxStay])
             .interpolator(d3.interpolateReds);
@@ -119,6 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("y1", "1")
             .attr("y2", "0");
 
+        // Use samples from the cell color scale so the legend matches the data.
         legendGradient.selectAll("stop")
             .data(d3.range(0, 1.01, 0.1))
             .join("stop")
