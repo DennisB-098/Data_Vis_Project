@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Average Hospital Stay by Age Group and Year</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body>
+    <div class="presentation-container">
+        <div class="slide active" id="slide-chart">
+            <div class="navbar">
+                <a href="index.html">Home Page</a>
+                <a href="about.html">About</a>
+                <a href="appendix.html">Appendix</a>
+            </div>
+
+            <main class="chart-page-content">
+                <div class="chart-header">
+                    <div>
+                        <h2>Average Hospital Stay by Age Group and Year</h2>
+                        <p class="subtitle">Mean hospital stay in days</p>
+                    </div>
+                </div>
+
+                <div id="heatmap-container" class="chart-card"></div>
+            </main>
+        </div>
+    </div>
+
+    <a href="Q3.html" class="btn floating-next-btn">← Previous</a>
+    <div id="chart-tooltip" class="tooltip"></div>
+    <script src="js/heatmapQ4.js"></script>
+</body>
+
+</html>

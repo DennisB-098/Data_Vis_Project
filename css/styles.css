@@ -352,6 +352,35 @@ body:has(#slide-chart) .slide {
     font-weight: bold;
     color: #284b68;
 }
+
+#heatmap-container {
+    height: 540px;
+    flex-grow: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#heatmap-container svg {
+    width: 100%;
+    height: 100%;
+}
+
+#heatmap-container rect {
+    stroke: #ffffff;
+    stroke-width: 1;
+    transition: opacity 0.15s ease;
+}
+
+#heatmap-container rect:hover {
+    opacity: 0.75;
+}
+
+.axis-label {
+    fill: #3b5668;
+    font-size: 13px;
+    font-weight: 600;
+}
 .floating-next-btn {
     position: fixed;
     right: 35px;
