@@ -277,6 +277,54 @@ body {
     z-index: 100;
 }
 
+.line-path {
+    fill: none;
+    stroke: #0b3b8b;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.line-point {
+    fill: #0b3b8b;
+    stroke: #ffffff;
+    stroke-width: 2;
+    cursor: help;
+    transition: r 140ms ease, fill 140ms ease;
+}
+
+.line-point.is-active,
+.line-point:focus-visible {
+    fill: #1689be;
+    stroke: #ffffff;
+    stroke-width: 3;
+}
+
+.chart-focus-line {
+    stroke: #789db0;
+    stroke-dasharray: 4 5;
+    stroke-width: 1.5;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+}
+
+.pie-slice {
+    cursor: help;
+    transition: opacity 160ms ease;
+}
+
+.legend-item {
+    transition: opacity 160ms ease;
+}
+
+.legend-item.is-muted {
+    opacity: 0.45;
+}
+
+.legend-item.is-active .legend-label {
+    font-weight: 700;
+}
+
 .q5-chart-page {
     overflow: visible;
 }
@@ -545,6 +593,11 @@ body:has(#slide-chart) .slide {
     color: #ffffff;
     box-shadow: 0 6px 18px #00000000;
     transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.floating-next-btn.previous {
+    right: auto;
+    left: 35px;
 }
 
 .floating-next-btn:hover {

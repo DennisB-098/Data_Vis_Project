@@ -68,6 +68,9 @@
     const arc = d3.arc()
       .innerRadius(0)
       .outerRadius(radius);
+    const hoverArc = d3.arc()
+      .innerRadius(0)
+      .outerRadius(radius + 10);
     const chart = svg.append("g").attr("transform", `translate(${centerX},${centerY})`);
     const slices = chart.selectAll(".pie-slice")
       .data(pie(chartData))
@@ -75,12 +78,22 @@
       .attr("class", "pie-slice")
       .attr("d", arc)
       .attr("fill", d => colors[d.data.name] || "#789db0")
+      .attr("stroke", "#ffffff")
+      .attr("stroke-width", 2)
       .attr("tabindex", 0)
       .attr("role", "img")
       .attr("aria-label", d => `${d.data.name}: ${formatValue(d.data.count)} hospitalisations, ${d3.format(".1%")(d.data.count / total)}`)
-      .on("pointerenter pointermove", (event, datum) => showTooltip(event, datum.data))
-      .on("pointerleave", () => tooltip.style("opacity", 0))
+      .on("pointerenter", (event, datum) => {
+        activateCategory(datum.data.name);
+        showTooltip(event, datum.data);
+      })
+      .on("pointermove", (event, datum) => showTooltip(event, datum.data))
+      .on("pointerleave", () => {
+        clearActiveCategory();
+        tooltip.style("opacity", 0);
+      })
       .on("focus", function (event, datum) {
+        activateCategory(datum.data.name);
         const bounds = this.getBoundingClientRect();
         showTooltip({
           clientX: bounds.left + bounds.width / 2,
@@ -89,7 +102,10 @@
           pageY: window.scrollY + bounds.top
         }, datum.data);
       })
-      .on("blur", () => tooltip.style("opacity", 0));
+      .on("blur", () => {
+        clearActiveCategory();
+        tooltip.style("opacity", 0);
+      });
 
     const legend = svg.append("g")
       .attr("transform", narrow ? `translate(24,${centerY + radius + 48})` : "translate(535,72)");
@@ -102,16 +118,16 @@
       .attr("role", "img")
       .attr("aria-label", d => `${d.name}, ${formatValue(d.count)} hospitalisations`)
       .on("pointerenter", (event, datum) => {
-        slices.attr("opacity", d => d.data.name === datum.name ? 1 : 0.35);
+        activateCategory(datum.name);
         showTooltip(event, datum);
       })
       .on("pointermove", showTooltip)
       .on("pointerleave", () => {
-        slices.attr("opacity", 1);
+        clearActiveCategory();
         tooltip.style("opacity", 0);
       })
       .on("focus", (event, datum) => {
-        slices.attr("opacity", d => d.data.name === datum.name ? 1 : 0.35);
+        activateCategory(datum.name);
         const bounds = event.currentTarget.getBoundingClientRect();
         showTooltip({
           clientX: bounds.left + bounds.width / 2,
@@ -121,7 +137,7 @@
         }, datum);
       })
       .on("blur", () => {
-        slices.attr("opacity", 1);
+        clearActiveCategory();
         tooltip.style("opacity", 0);
       });
 
@@ -143,14 +159,36 @@
       .text(d => currentMetric === "percentage"
         ? d3.format(".1%")(d.count / total)
         : `${formatValue(d.count)} hospitalisations`);
+
+    function activateCategory(name) {
+      slices
+        .interrupt()
+        .transition()
+        .duration(160)
+        .attr("opacity", d => d.data.name === name ? 1 : 0.35)
+        .attr("d", d => d.data.name === name ? hoverArc(d) : arc(d));
+      legendItems
+        .classed("is-active", d => d.name === name)
+        .classed("is-muted", d => d.name !== name);
+    }
+
+    function clearActiveCategory() {
+      slices
+        .interrupt()
+        .transition()
+        .duration(160)
+        .attr("opacity", 1)
+        .attr("d", arc);
+      legendItems.classed("is-active", false).classed("is-muted", false);
+    }
   }
 
-  d3.csv("Data/q2_clean.csv", row => ({
+  d3.csv("data/q2_clean.csv", row => ({
     name: row.prediction,
     count: Number(row["Sum(Hospitalisations)"])
   })).then(data => {
     if (data.length === 0 || data.some(d => !d.name || !Number.isFinite(d.count) || d.count < 0)) {
-      showError("The road user data could not be read. Check the columns in Data/q2_clean.csv.");
+      showError("The road user data could not be read. Check the columns in data/q2_clean.csv.");
       return;
     }
 
@@ -169,6 +207,6 @@
     render();
   }).catch(error => {
     console.error("Unable to load Question 2 data:", error);
-    showError("Unable to load road user data. Open this page through a local web server and check that Data/q2_clean.csv is available.");
+    showError("Unable to load road user data. Open this page through a local web server and check that data/q2_clean.csv is available.");
   });
 })();

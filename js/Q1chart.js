@@ -34,12 +34,12 @@
     positionTooltip(event);
   }
 
-  d3.csv("Data/q1_clean.csv", row => ({
+  d3.csv("data/q1_clean.csv", row => ({
     year: Number(row["Calendar year"]),
     hospitalisations: Number(row["Sum(Hospitalisations)"])
   })).then(data => {
     if (data.length === 0 || data.some(d => !Number.isFinite(d.year) || !Number.isFinite(d.hospitalisations))) {
-      showError("The annual data could not be read. Check the columns in Data/q1_clean.csv.");
+      showError("The annual data could not be read. Check the columns in data/q1_clean.csv.");
       return;
     }
 
@@ -84,12 +84,27 @@
       .y(d => y(d.hospitalisations))
       .curve(d3.curveMonotoneX);
 
-    plot.append("path")
+    const linePath = plot.append("path")
       .datum(data)
       .attr("class", "line-path")
       .attr("d", line);
 
-    plot.selectAll(".line-point")
+    const pathLength = linePath.node().getTotalLength();
+    linePath
+      .attr("stroke-dasharray", `${pathLength} ${pathLength}`)
+      .attr("stroke-dashoffset", pathLength)
+      .transition()
+      .duration(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900)
+      .ease(d3.easeCubicOut)
+      .attr("stroke-dashoffset", 0);
+
+    const focusLine = plot.append("line")
+      .attr("class", "chart-focus-line")
+      .attr("y1", 0)
+      .attr("y2", plotHeight)
+      .style("opacity", 0);
+
+    const points = plot.selectAll(".line-point")
       .data(data)
       .join("circle")
       .attr("class", "line-point")
@@ -99,9 +114,16 @@
       .attr("tabindex", 0)
       .attr("role", "img")
       .attr("aria-label", d => `${d.year}: ${formatValue(d.hospitalisations)} hospitalisations`)
-      .on("pointerenter pointermove", showTooltip)
-      .on("pointerleave", () => tooltip.style("opacity", 0))
+      .on("pointerenter", function (event, datum) {
+        activatePoint(datum);
+        showTooltip(event, datum);
+      })
+      .on("pointermove", showTooltip)
+      .on("pointerleave", () => {
+        clearActivePoint();
+      })
       .on("focus", function (event, datum) {
+        activatePoint(datum);
         const bounds = this.getBoundingClientRect();
         showTooltip({
           clientX: bounds.left + bounds.width / 2,
@@ -110,9 +132,27 @@
           pageY: window.scrollY + bounds.top
         }, datum);
       })
-      .on("blur", () => tooltip.style("opacity", 0));
+      .on("blur", () => {
+        clearActivePoint();
+      });
+
+    function activatePoint(datum) {
+      points
+        .classed("is-active", d => d.year === datum.year)
+        .attr("r", d => d.year === datum.year ? 8 : 6);
+      focusLine
+        .attr("x1", x(datum.year))
+        .attr("x2", x(datum.year))
+        .style("opacity", 1);
+    }
+
+    function clearActivePoint() {
+      points.classed("is-active", false).attr("r", 6);
+      focusLine.style("opacity", 0);
+        tooltip.style("opacity", 0);
+    }
   }).catch(error => {
     console.error("Unable to load Question 1 data:", error);
-    showError("Unable to load annual data. Open this page through a local web server and check that Data/q1_clean.csv is available.");
+    showError("Unable to load annual data. Open this page through a local web server and check that data/q1_clean.csv is available.");
   });
 })();
