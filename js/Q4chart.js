@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("heatmap-container");
     const tooltip = d3.select("#chart-tooltip");
-    const chartHeader = document.querySelector(".chart-header");
     const backButton = document.createElement("button");
     const periodOrder = ["Jan-Jun", "Jul-Dec"];
     let periodData = [];
@@ -13,7 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
     backButton.className = "metric-btn";
     backButton.textContent = "← Back to yearly view";
     backButton.hidden = true;
-    chartHeader.appendChild(backButton);
+    backButton.classList.add("q4-back-button");
+    container.appendChild(backButton);
 
     d3.csv("Data/question4.1data.csv", d => ({
         period: d["6-monthly (#3)"],
@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function renderHeatmap(viewData, selectedYear = null) {
-        container.innerHTML = "";
+        container.querySelectorAll("svg").forEach(svg => svg.remove());
 
         const isDrilldown = selectedYear !== null;
         const title = isDrilldown
@@ -245,6 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .text("Days");
 
         backButton.hidden = !isDrilldown;
+        container.appendChild(backButton);
         svg.transition()
             .duration(250)
             .style("opacity", 1);
