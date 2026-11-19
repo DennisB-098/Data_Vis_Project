@@ -1,41 +1,97 @@
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("heatmap-container");
     const tooltip = d3.select("#chart-tooltip");
+    const chartHeader = document.querySelector(".chart-header");
+    const backButton = document.createElement("button");
+    const periodOrder = ["Jan-Jun", "Jul-Dec"];
+    let periodData = [];
+    let annualData = [];
+    let years = [];
+    let ageGroups = [];
 
-    // Normalize the CSV fields once before building the heatmap.
-    d3.csv("data/question4data.csv", d => ({
+    backButton.type = "button";
+    backButton.className = "metric-btn";
+    backButton.textContent = "← Back to yearly view";
+    backButton.hidden = true;
+    chartHeader.appendChild(backButton);
+
+    d3.csv("Data/question4.1data.csv", d => ({
+        period: d["6-monthly (#3)"],
         ageGroup: d["Age group"],
         year: +d["Calendar year"],
         stay: +d["Mean(Average_Hospital_Stay)"]
     })).then(data => {
-        renderHeatmap(data);
+        periodData = data;
+        if (!periodData.length || periodData.some(d =>
+            !periodOrder.includes(d.period) ||
+            !d.ageGroup ||
+            !Number.isInteger(d.year) ||
+            !Number.isFinite(d.stay)
+        )) {
+            throw new Error("The CSV is empty or contains invalid heatmap values.");
+        }
+
+        years = Array.from(new Set(periodData.map(d => d.year))).sort(d3.ascending);
+        ageGroups = Array.from(new Set(periodData.map(d => d.ageGroup)));
+        annualData = d3.rollups(
+            periodData,
+            rows => d3.mean(rows, d => d.stay),
+            d => d.year,
+            d => d.ageGroup
+        ).flatMap(([year, groups]) =>
+            groups.map(([ageGroup, stay]) => ({ year, ageGroup, stay }))
+        );
+
+        renderHeatmap(annualData);
     }).catch(error => {
         container.innerHTML =
-            `<p>Unable to load question4data.csv. Please run this page through a local server. Error details: ${error}</p>`;
+            `<p>Unable to load question4.1data.csv. Please run this page through a local server. Error details: ${error}</p>`;
     });
 
-    function renderHeatmap(data) {
+    backButton.addEventListener("click", () => {
+        tooltip.style("opacity", 0);
+        renderHeatmap(annualData);
+    });
+
+    function renderHeatmap(viewData, selectedYear = null) {
         container.innerHTML = "";
 
-        const margin = { top: 30, right: 95, bottom: 70, left: 90 };
+        const isDrilldown = selectedYear !== null;
+        const title = isDrilldown
+            ? `Average Hospital Stay by Age Group and 6-Month Period in ${selectedYear}`
+            : "Average Hospital Stay by Age Group and Year";
+        const xValues = isDrilldown
+            ? periodOrder.filter(period => viewData.some(d => d.period === period))
+            : years;
+        const margin = { top: 50, right: 95, bottom: 70, left: 90 };
         const width = 900;
         const height = 460;
         const innerWidth = width - margin.left - margin.right;
         const innerHeight = height - margin.top - margin.bottom;
 
-        const years = Array.from(new Set(data.map(d => d.year))).sort(d3.ascending);
-        const ageGroups = Array.from(new Set(data.map(d => d.ageGroup)));
-
         const svg = d3.select(container)
             .append("svg")
             .attr("viewBox", `0 0 ${width} ${height}`)
-            .attr("aria-label", "Heatmap of average hospital stay by age group and year");
+            .attr("role", "img")
+            .attr("aria-label", title)
+            .style("opacity", 0);
+
+        svg.append("title").text(title);
+
+        svg.append("text")
+            .attr("x", width / 2)
+            .attr("y", 25)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#3b5668")
+            .attr("font-size", 18)
+            .attr("font-weight", 700)
+            .text(title);
 
         const innerChart = svg.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
         const xScale = d3.scaleBand()
-            .domain(years)
+            .domain(xValues)
             .range([0, innerWidth])
             .padding(0.05);
 
@@ -44,29 +100,35 @@ document.addEventListener("DOMContentLoaded", () => {
             .range([0, innerHeight])
             .padding(0.05);
 
-        const minStay = d3.min(data, d => d.stay);
-        const maxStay = d3.max(data, d => d.stay);
-
-        // Higher average stays map to darker reds.
+        const minStay = d3.min(periodData, d => d.stay);
+        const maxStay = d3.max(periodData, d => d.stay);
         const colorScale = d3.scaleSequential()
             .domain([minStay, maxStay])
             .interpolator(d3.interpolateReds);
 
         innerChart.selectAll("rect")
-            .data(data)
+            .data(viewData)
             .join("rect")
-            .attr("x", d => xScale(d.year))
+            .attr("x", d => xScale(isDrilldown ? d.period : d.year))
             .attr("y", d => yScale(d.ageGroup))
             .attr("width", xScale.bandwidth())
             .attr("height", yScale.bandwidth())
             .attr("rx", 3)
             .attr("ry", 3)
             .attr("fill", d => colorScale(d.stay))
+            .attr("role", isDrilldown ? "img" : "button")
+            .attr("tabindex", isDrilldown ? null : 0)
+            .attr("aria-label", d => isDrilldown
+                ? `${d.ageGroup}, ${formatPeriod(d.period)} ${d.year}: ${d.stay.toFixed(2)} days`
+                : `View half-year average stay for ${d.ageGroup} in ${d.year}: ${d.stay.toFixed(2)} days`
+            )
+            .style("cursor", isDrilldown ? "default" : "pointer")
             .on("mouseenter", (event, d) => {
                 tooltip
                     .style("opacity", 1)
                     .html(`<strong>Age group:</strong> ${d.ageGroup}<br>
-                           <strong>Year:</strong> ${d.year}<br>
+                           <strong>${isDrilldown ? "Period" : "Year"}:</strong> ${isDrilldown ? formatPeriod(d.period) : d.year}<br>
+                           ${isDrilldown ? `<strong>Year:</strong> ${d.year}<br>` : ""}
                            <strong>Average stay:</strong> ${d.stay.toFixed(2)} days`);
             })
             .on("mousemove", event => {
@@ -76,12 +138,28 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .on("mouseleave", () => {
                 tooltip.style("opacity", 0);
+            })
+            .on("click", (event, d) => {
+                if (!isDrilldown) {
+                    tooltip.style("opacity", 0);
+                    renderHeatmap(periodData.filter(row => row.year === d.year), d.year);
+                }
+            })
+            .on("keydown", (event, d) => {
+                if (!isDrilldown && (event.key === "Enter" || event.key === " ")) {
+                    event.preventDefault();
+                    tooltip.style("opacity", 0);
+                    renderHeatmap(periodData.filter(row => row.year === d.year), d.year);
+                    backButton.focus();
+                }
             });
 
         innerChart.append("g")
             .attr("class", "axis")
             .attr("transform", `translate(0,${innerHeight})`)
-            .call(d3.axisBottom(xScale).tickFormat(d3.format("d")).tickSizeOuter(0));
+            .call(d3.axisBottom(xScale)
+                .tickFormat(isDrilldown ? formatPeriod : d3.format("d"))
+                .tickSizeOuter(0));
 
         innerChart.append("g")
             .attr("class", "axis")
@@ -92,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("x", innerWidth / 2)
             .attr("y", innerHeight + 55)
             .attr("text-anchor", "middle")
-            .text("Calendar year");
+            .text(isDrilldown ? "Six-month period" : "Calendar year");
 
         innerChart.append("text")
             .attr("class", "axis-label")
@@ -121,7 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("y1", "1")
             .attr("y2", "0");
 
-        // Use samples from the cell color scale so the legend matches the data.
         legendGradient.selectAll("stop")
             .data(d3.range(0, 1.01, 0.1))
             .join("stop")
@@ -143,5 +220,14 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("text-anchor", "middle")
             .attr("font-weight", "bold")
             .text("Days");
+
+        backButton.hidden = !isDrilldown;
+        svg.transition()
+            .duration(250)
+            .style("opacity", 1);
+    }
+
+    function formatPeriod(period) {
+        return period.replace("-", "–");
     }
 });

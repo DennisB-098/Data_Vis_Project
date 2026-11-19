@@ -7,7 +7,7 @@ const Q5_CHART_CONFIG = {
     },
     width: 1000,
     height: 540,
-    margin: { top: 24, right: 38, bottom: 76, left: 112 }
+    margin: { top: 68, right: 38, bottom: 76, left: 112 }
 };
 
 function parseQ5Row(d, index) {
@@ -73,7 +73,9 @@ function aggregateQ5Data(data, selectedYear, selectedMetric, ageOrder) {
 
 document.addEventListener("DOMContentLoaded", async () => {
     const container = document.getElementById("butterfly-chart-container");
-    const yearSelect = document.getElementById("year-select");
+    const yearSlider = document.getElementById("year-slider");
+    const yearSliderValue = document.getElementById("year-slider-value");
+    const yearSliderStops = document.getElementById("year-slider-stops");
     const metricButtons = d3.selectAll(".metric-btn");
     const tooltip = d3.select("#chart-tooltip");
     const { ageOrder, metricLabels, width, height, margin } = Q5_CHART_CONFIG;
@@ -83,6 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const formatStay = d3.format(".2f");
 
     let selectedMetric = "hospitalisations";
+    let years = [];
     const formatValue = value => selectedMetric === "hospitalisations"
         ? formatCount(value)
         : formatStay(value);
@@ -94,11 +97,87 @@ document.addEventListener("DOMContentLoaded", async () => {
             throw new Error("The CSV contains no data rows.");
         }
 
+        years = Array.from(new Set(sourceData.map(d => d.year))).sort(d3.ascending);
+        yearSlider.max = String(years.length);
+        yearSlider.value = String(years.length);
+
+        [...years.map(String), "All"].forEach((label, index) => {
+            const stop = document.createElement("span");
+            stop.className = "year-slider-stop";
+            if (index === years.length) {
+                stop.classList.add("all-stop");
+            }
+
+            const dot = document.createElement("span");
+            dot.className = "year-slider-dot";
+            const text = document.createElement("span");
+            text.className = "year-slider-label";
+            text.textContent = label;
+
+            stop.append(dot, text);
+            yearSliderStops.appendChild(stop);
+        });
+
+        function getSelectedYear() {
+            const index = Number(yearSlider.value);
+            return index === years.length ? "All" : String(years[index]);
+        }
+
+        function updateYearSlider() {
+            const selectedIndex = Number(yearSlider.value);
+            yearSliderValue.textContent = getSelectedYear();
+            yearSlider.setAttribute("aria-valuetext", getSelectedYear());
+            yearSliderStops.querySelectorAll(".year-slider-stop").forEach((stop, index) => {
+                stop.classList.toggle("is-selected", index === selectedIndex);
+            });
+        }
+
         const chartSvg = d3.select(container)
             .append("svg")
             .attr("viewBox", `0 0 ${width} ${height}`)
             .attr("role", "img")
-            .attr("aria-label", "Butterfly chart comparing male and female values by age group");
+            .attr("aria-label", "Hospitalisations by Sex and Age Group");
+
+        const svgTitle = chartSvg.append("title");
+        const visibleTitle = chartSvg.append("text")
+            .attr("class", "butterfly-chart-title")
+            .attr("x", width / 2)
+            .attr("y", 28)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#3b5668")
+            .attr("font-size", 20)
+            .attr("font-weight", 700);
+
+        const legend = chartSvg.append("g")
+            .attr("class", "butterfly-svg-legend")
+            .attr("transform", `translate(${width - margin.right - 190},28)`)
+            .attr("role", "group")
+            .attr("aria-label", "Male and female");
+
+        const legendEntries = [
+            { sex: "Male", color: "#3977a8" },
+            { sex: "Female", color: "#d65b78" }
+        ];
+        const legendItems = legend.selectAll(".butterfly-svg-legend-item")
+            .data(legendEntries)
+            .join("g")
+            .attr("class", "butterfly-svg-legend-item")
+            .attr("transform", (d, index) => `translate(${index * 92},0)`);
+
+        legendItems.append("rect")
+            .attr("width", 13)
+            .attr("height", 13)
+            .attr("y", -10)
+            .attr("rx", 3)
+            .attr("fill", d => d.color);
+
+        legendItems.append("text")
+            .attr("x", 19)
+            .attr("y", 1)
+            .attr("fill", "#3b5668")
+            .attr("font-size", 14)
+            .attr("font-weight", 600)
+            .text(d => d.sex);
 
         const plot = chartSvg.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
@@ -137,13 +216,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         function processData() {
             return aggregateQ5Data(
                 sourceData,
-                yearSelect.value,
+                getSelectedYear(),
                 selectedMetric,
                 ageOrder
             );
         }
 
         function render(animate) {
+            const title = selectedMetric === "hospitalisations"
+                ? "Hospitalisations by Sex and Age Group"
+                : "Average Hospital Stay by Sex and Age Group";
             const rows = processData();
             const valuesByAge = new Map(rows.map(d => [d.ageGroup, d]));
             const bars = series.map(d => {
@@ -164,6 +246,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 .tickSize(-innerHeight)
                 .tickPadding(9)
                 .tickFormat(value => formatValue(Math.abs(value)));
+
+            chartSvg.attr("aria-label", title);
+            svgTitle.text(title);
+            visibleTitle.text(title);
 
             chartSvg.select(".butterfly-axis-label")
                 .text(selectedMetric === "hospitalisations"
@@ -221,7 +307,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         }
 
-        yearSelect.addEventListener("change", () => render(true));
+        yearSlider.addEventListener("input", () => {
+            updateYearSlider();
+            render(true);
+        });
         metricButtons.on("click", function () {
             selectedMetric = this.dataset.metric;
             // Keep the visual selection and accessible pressed state in sync.
@@ -235,6 +324,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             render(true);
         });
 
+        updateYearSlider();
         render(false);
     } catch (error) {
         container.innerHTML = "";

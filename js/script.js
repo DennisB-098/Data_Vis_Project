@@ -1,38 +1,49 @@
-// Wait for the HTML document to fully load before running the script
 document.addEventListener('DOMContentLoaded', () => {
-
-    // Get all elements with the class "slide"
     const slides = document.querySelectorAll('.slide');
     let currentSlideIndex = 0;
+    let isTransitioning = false;
 
-    // Function to hide the current slide and show the next one
     function goToNextSlide() {
-        // 1. Hide current slide
-        slides[currentSlideIndex].classList.remove('active');
-
-        // 2. Increase index
-        currentSlideIndex++;
-
-        // 3. If we reach the end, go back to the first slide
-        if (currentSlideIndex >= slides.length) {
-            currentSlideIndex = 0;
+        if (isTransitioning || currentSlideIndex + 1 >= slides.length) {
+            return;
         }
 
-        // 4. Show the new slide
-        slides[currentSlideIndex].classList.add('active');
+        const currentSlide = slides[currentSlideIndex];
+        const nextSlide = slides[currentSlideIndex + 1];
+        currentSlideIndex += 1;
+
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            currentSlide.classList.remove('active');
+            nextSlide.classList.add('active');
+            return;
+        }
+
+        isTransitioning = true;
+        nextSlide.classList.add('active', 'slide-enter-from-right');
+        currentSlide.classList.add('slide-exit-to-left');
+
+        function finishTransition() {
+            if (!isTransitioning) {
+                return;
+            }
+
+            currentSlide.classList.remove('active', 'slide-exit-to-left');
+            nextSlide.classList.remove('slide-enter-from-right');
+            isTransitioning = false;
+        }
+
+        nextSlide.addEventListener('animationend', event => {
+            if (event.target === nextSlide) {
+                finishTransition();
+            }
+        }, { once: true });
+
+        window.setTimeout(finishTransition, 550);
     }
 
-    // Connect the buttons to the function
     const startBtn = document.getElementById('btn-start');
-    const exploreBtn = document.getElementById('btn-explore');
 
-    // Add click events to the buttons
     if (startBtn) {
         startBtn.addEventListener('click', goToNextSlide);
-    }
-
-    if (exploreBtn) {
-        // Since there is no 3rd slide yet, this will loop back to the first slide
-        exploreBtn.addEventListener('click', goToNextSlide);
     }
 });

@@ -7,6 +7,7 @@
     <title>Hospitalisations and Average Hospital Stay by Age Group and Sex</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="js/page-transition.js" defer></script>
 </head>
 
 <body>
@@ -21,27 +22,22 @@
             <main class="chart-page-content q5-chart-page">
                 <div class="chart-header">
                     <div>
-                        <h2>Hospitalisations and Average Hospital Stay by Age Group and Sex</h2>
+                        <h2>How does the burden of road trauma differ between males and females across different age
+                            groups?</h2>
                         <p class="subtitle">Male values extend left; female values extend right</p>
                     </div>
                     <div class="chart-controls">
-                        <label class="year-control" for="year-select">
-                            Calendar year
-                            <select id="year-select" aria-label="Select calendar year">
-                                <option value="All" selected>All</option>
-                                <option value="2011">2011</option>
-                                <option value="2012">2012</option>
-                                <option value="2013">2013</option>
-                                <option value="2014">2014</option>
-                                <option value="2015">2015</option>
-                                <option value="2016">2016</option>
-                                <option value="2017">2017</option>
-                                <option value="2018">2018</option>
-                                <option value="2019">2019</option>
-                                <option value="2020">2020</option>
-                                <option value="2021">2021</option>
-                            </select>
-                        </label>
+                        <div class="year-control">
+                            <div class="year-control-heading">
+                                <label for="year-slider">Calendar year</label>
+                                <output id="year-slider-value" for="year-slider" aria-live="polite">All</output>
+                            </div>
+                            <div class="year-slider-wrap">
+                                <input id="year-slider" type="range" min="0" max="11" step="1" value="11"
+                                    aria-label="Select calendar year or all years">
+                                <div id="year-slider-stops" class="year-slider-stops" aria-hidden="true"></div>
+                            </div>
+                        </div>
                         <div class="metric-controls" role="group" aria-label="Select chart metric">
                             <button class="metric-btn active" type="button" data-metric="hospitalisations"
                                 aria-pressed="true">Hospitalisations</button>
@@ -51,10 +47,6 @@
                     </div>
                 </div>
 
-                <div class="butterfly-legend" aria-label="Chart legend">
-                    <span class="legend-item"><span class="legend-swatch legend-male"></span>Male</span>
-                    <span class="legend-item"><span class="legend-swatch legend-female"></span>Female</span>
-                </div>
                 <div id="butterfly-chart-container" class="chart-card" aria-live="polite"></div>
             </main>
         </div>
