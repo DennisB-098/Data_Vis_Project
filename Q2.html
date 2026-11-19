@@ -20,11 +20,12 @@
                 <div class="chart-header">
                     <div>
                         <h2>Which road user groups account for the most hospitalisations?</h2>
-                        <p class="subtitle">Compare hospitalisations by road user type. Hover over a slice or legend item to highlight it, or switch between totals and percentages.</p>
+                        <p class="subtitle">Compare hospitalisations by road user type. Hover or focus to preview a group; click or tap to pin its details.</p>
                     </div>
                     <div class="metric-controls" role="group" aria-label="Chart measure">
                         <button class="btn metric-btn active" type="button" data-metric="count" aria-pressed="true">Total number</button>
                         <button class="btn metric-btn" type="button" data-metric="percentage" aria-pressed="false">Percentage</button>
+                        <button class="btn metric-btn clear-selection-btn" id="q2-clear-selection" type="button" hidden>Clear highlight</button>
                     </div>
                 </div>
                 <div class="chart-insights" aria-label="Road user hospitalisation summary">
@@ -44,6 +45,7 @@
                         <span class="insight-note">share of included hospitalisations</span>
                     </article>
                 </div>
+                <p class="selection-status" id="q2-selection-status" aria-live="polite">Hover or focus a group to preview it, then click or tap to pin its details.</p>
                 <div id="q2-chart" class="chart-card">
                     <p class="chart-error">Loading road user data…</p>
                 </div>

@@ -280,6 +280,17 @@ body {
     color: #ffffff;
 }
 
+.clear-selection-btn {
+    background-color: #eaddcc;
+}
+
+.selection-status {
+    min-height: 1.2em;
+    margin: 0 0 10px;
+    color: #526a78;
+    font-size: 0.82rem;
+}
+
 .chart-card {
     flex-grow: 1;
     width: 100%;
@@ -361,12 +372,22 @@ body {
 }
 
 .pie-slice {
-    cursor: help;
+    cursor: pointer;
     transition: opacity 160ms ease;
 }
 
+.pie-slice:focus-visible {
+    stroke: #e29a50;
+    stroke-width: 4;
+}
+
 .legend-item {
+    cursor: pointer;
     transition: opacity 160ms ease;
+}
+
+.legend-item:focus-visible .legend-label {
+    text-decoration: underline;
 }
 
 .legend-item.is-muted {

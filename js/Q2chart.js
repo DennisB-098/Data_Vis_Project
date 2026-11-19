@@ -2,6 +2,9 @@
   const container = d3.select("#q2-chart");
   const tooltip = d3.select("#chart-tooltip");
   const totalLabel = d3.select("#q2-total");
+  const clearSelectionButton = d3.select("#q2-clear-selection");
+  const selectionStatus = d3.select("#q2-selection-status");
+  const defaultSelectionStatus = "Hover or focus a group to preview it, then click or tap to pin its details.";
   const formatValue = d3.format(",");
   const colors = {
     "Car occupant": "#263d54",
@@ -15,6 +18,7 @@
   };
   let chartData = [];
   let currentMetric = "count";
+  let selectedCategory = null;
 
   function showError(message) {
     container.html("").append("p").attr("class", "chart-error").text(message);
@@ -53,12 +57,13 @@
     const centerY = narrow ? 190 : 250;
     const radius = narrow ? 165 : 190;
     const total = d3.sum(chartData, d => d.count);
+    let activeCategory = null;
     const svg = container.html("").append("svg")
       .attr("viewBox", `0 0 ${width} ${height}`)
       .style("width", "100%")
       .style("height", "auto")
-      .attr("role", "img")
-      .attr("aria-label", `Pie chart of hospitalisations by road user type, displayed as ${currentMetric === "count" ? "total numbers" : "percentages"}`);
+      .attr("role", "group")
+      .attr("aria-label", `Interactive donut chart of hospitalisations by road user type, displayed as ${currentMetric === "count" ? "total numbers" : "percentages"}`);
 
     totalLabel.text(formatValue(total));
     const pie = d3.pie()
@@ -80,8 +85,9 @@
       .attr("stroke", "#ffffff")
       .attr("stroke-width", 2)
       .attr("tabindex", 0)
-      .attr("role", "img")
-      .attr("aria-label", d => `${d.data.name}: ${formatValue(d.data.count)} hospitalisations, ${d3.format(".1%")(d.data.count / total)}`)
+      .attr("role", "button")
+      .attr("aria-pressed", d => selectedCategory === d.data.name ? "true" : "false")
+      .attr("aria-label", d => `${d.data.name}: ${formatValue(d.data.count)} hospitalisations, ${d3.format(".1%")(d.data.count / total)}. Click to pin details.`)
       .on("pointerenter", (event, datum) => {
         activateCategory(datum.data.name);
         showTooltip(event, datum.data);
@@ -90,6 +96,16 @@
       .on("pointerleave", () => {
         clearActiveCategory();
         tooltip.style("opacity", 0);
+      })
+      .on("click", (event, datum) => {
+        event.stopPropagation();
+        toggleCategory(datum.data.name);
+      })
+      .on("keydown", (event, datum) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggleCategory(datum.data.name);
+        }
       })
       .on("focus", function (event, datum) {
         activateCategory(datum.data.name);
@@ -126,8 +142,9 @@
       .attr("class", "legend-item")
       .attr("transform", (d, index) => `translate(0,${index * (narrow ? 34 : 48)})`)
       .attr("tabindex", 0)
-      .attr("role", "img")
-      .attr("aria-label", d => `${d.name}, ${formatValue(d.count)} hospitalisations`)
+      .attr("role", "button")
+      .attr("aria-pressed", d => selectedCategory === d.name ? "true" : "false")
+      .attr("aria-label", d => `${d.name}, ${formatValue(d.count)} hospitalisations, ${d3.format(".1%")(d.count / total)}. Click to pin details.`)
       .on("pointerenter", (event, datum) => {
         activateCategory(datum.name);
         showTooltip(event, datum);
@@ -136,6 +153,16 @@
       .on("pointerleave", () => {
         clearActiveCategory();
         tooltip.style("opacity", 0);
+      })
+      .on("click", (event, datum) => {
+        event.stopPropagation();
+        toggleCategory(datum.name);
+      })
+      .on("keydown", (event, datum) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggleCategory(datum.name);
+        }
       })
       .on("focus", (event, datum) => {
         activateCategory(datum.name);
@@ -171,30 +198,70 @@
         ? d3.format(".1%")(d.count / total)
         : `${formatValue(d.count)} hospitalisations`);
 
-    updateDonutCenter(null);
+    updateSelectionStatus();
+    if (selectedCategory) {
+      activateCategory(selectedCategory);
+    } else {
+      updateDonutCenter(null);
+    }
+
+    function toggleCategory(name) {
+      selectedCategory = selectedCategory === name ? null : name;
+      if (selectedCategory) {
+        activateCategory(selectedCategory);
+      } else if (activeCategory) {
+        activateCategory(activeCategory);
+      } else {
+        clearActiveCategory();
+      }
+      updateSelectionStatus();
+    }
+
+    function updateSelectionStatus(previewName) {
+      clearSelectionButton.property("hidden", !selectedCategory);
+      selectionStatus.text(selectedCategory
+        ? previewName && previewName !== selectedCategory
+          ? `${selectedCategory} pinned; previewing ${previewName}.`
+          : `${selectedCategory} pinned. Click or tap it again, or use Clear highlight.`
+        : defaultSelectionStatus);
+    }
 
     function activateCategory(name) {
+      activeCategory = name;
       slices
         .interrupt()
         .transition()
         .duration(160)
         .attr("opacity", d => d.data.name === name ? 1 : 0.35)
         .attr("d", d => d.data.name === name ? hoverArc(d) : arc(d));
+      slices.attr("aria-pressed", d => selectedCategory === d.data.name ? "true" : "false");
       legendItems
         .classed("is-active", d => d.name === name)
-        .classed("is-muted", d => d.name !== name);
+        .classed("is-muted", d => d.name !== name)
+        .attr("aria-pressed", d => selectedCategory === d.name ? "true" : "false");
       updateDonutCenter(chartData.find(d => d.name === name));
+      updateSelectionStatus(name);
     }
 
     function clearActiveCategory() {
+      if (selectedCategory) {
+        activateCategory(selectedCategory);
+        return;
+      }
+      activeCategory = null;
       slices
         .interrupt()
         .transition()
         .duration(160)
         .attr("opacity", 1)
         .attr("d", arc);
-      legendItems.classed("is-active", false).classed("is-muted", false);
+      slices.attr("aria-pressed", "false");
+      legendItems
+        .classed("is-active", false)
+        .classed("is-muted", false)
+        .attr("aria-pressed", "false");
       updateDonutCenter(null);
+      updateSelectionStatus();
     }
 
     function updateDonutCenter(datum) {
@@ -234,14 +301,18 @@
     );
     d3.select("#q2-top-three").text(d3.format(".1%")(topThreeCount / total));
 
-    d3.selectAll(".metric-btn").on("click", function () {
+    d3.selectAll(".metric-btn[data-metric]").on("click", function () {
       currentMetric = this.dataset.metric;
-      d3.selectAll(".metric-btn")
+      d3.selectAll(".metric-btn[data-metric]")
         .classed("active", false)
         .attr("aria-pressed", "false");
       d3.select(this)
         .classed("active", true)
         .attr("aria-pressed", "true");
+      render();
+    });
+    clearSelectionButton.on("click", () => {
+      selectedCategory = null;
       render();
     });
     window.addEventListener("resize", render);
