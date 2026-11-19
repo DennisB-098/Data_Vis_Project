@@ -5,6 +5,7 @@
   const height = 440;
   const margin = { top: 24, right: 28, bottom: 58, left: 76 };
   const formatValue = d3.format(",");
+  let dataByYear = new Map();
 
   function showError(message) {
     container.html("").append("p").attr("class", "chart-error").text(message);
@@ -28,8 +29,12 @@
   }
 
   function showTooltip(event, datum) {
+    const previousYear = dataByYear.get(datum.year - 1);
+    const yearChange = previousYear
+      ? d3.format("+.1%")((datum.hospitalisations - previousYear.hospitalisations) / previousYear.hospitalisations)
+      : "First year in series";
     tooltip
-      .html(`<strong>${datum.year}</strong><br>${formatValue(datum.hospitalisations)} hospitalisations`)
+      .html(`<strong>${datum.year}</strong><br>${formatValue(datum.hospitalisations)} hospitalisations<br><span>Year-on-year: ${yearChange}</span>`)
       .style("opacity", 1);
     positionTooltip(event);
   }
@@ -42,6 +47,20 @@
       showError("The annual data could not be read. Check the columns in data/q1_clean.csv.");
       return;
     }
+
+    dataByYear = new Map(data.map(d => [d.year, d]));
+    const total = d3.sum(data, d => d.hospitalisations);
+    const average = d3.mean(data, d => d.hospitalisations);
+    const peak = data.reduce((highest, current) =>
+      current.hospitalisations > highest.hospitalisations ? current : highest
+    );
+    const firstYear = data[0];
+    const lastYear = data[data.length - 1];
+    const periodChange = (lastYear.hospitalisations - firstYear.hospitalisations) / firstYear.hospitalisations;
+    d3.select("#q1-total").text(formatValue(total));
+    d3.select("#q1-peak-year").text(peak.year);
+    d3.select("#q1-peak-value").text(`${formatValue(peak.hospitalisations)} hospitalisations`);
+    d3.select("#q1-change").text(d3.format("+.1%")(periodChange));
 
     const svg = container.html("").append("svg")
       .attr("viewBox", `0 0 ${width} ${height}`)
@@ -63,6 +82,18 @@
     plot.append("g")
       .attr("class", "grid")
       .call(d3.axisLeft(y).ticks(5).tickSize(-plotWidth).tickFormat(""));
+
+    plot.append("line")
+      .attr("class", "average-line")
+      .attr("x1", 0)
+      .attr("x2", plotWidth)
+      .attr("y1", y(average))
+      .attr("y2", y(average));
+    plot.append("text")
+      .attr("class", "average-label")
+      .attr("x", 8)
+      .attr("y", y(average) - 8)
+      .text(`11-year average: ${formatValue(Math.round(average))}`);
 
     plot.append("g")
       .attr("class", "axis")
@@ -108,6 +139,7 @@
       .data(data)
       .join("circle")
       .attr("class", "line-point")
+      .classed("is-peak", d => d.year === peak.year)
       .attr("cx", d => x(d.year))
       .attr("cy", d => y(d.hospitalisations))
       .attr("r", 6)
@@ -149,7 +181,7 @@
     function clearActivePoint() {
       points.classed("is-active", false).attr("r", 6);
       focusLine.style("opacity", 0);
-        tooltip.style("opacity", 0);
+      tooltip.style("opacity", 0);
     }
   }).catch(error => {
     console.error("Unable to load Question 1 data:", error);

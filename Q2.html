@@ -27,7 +27,23 @@
                         <button class="btn metric-btn" type="button" data-metric="percentage" aria-pressed="false">Percentage</button>
                     </div>
                 </div>
-                <p class="subtitle" id="q2-total" aria-live="polite"></p>
+                <div class="chart-insights" aria-label="Road user hospitalisation summary">
+                    <article class="insight-card">
+                        <span class="insight-label">Included hospitalisations</span>
+                        <strong id="q2-total" aria-live="polite">—</strong>
+                        <span class="insight-note">across all road user groups</span>
+                    </article>
+                    <article class="insight-card">
+                        <span class="insight-label">Largest group</span>
+                        <strong id="q2-largest">—</strong>
+                        <span class="insight-note" id="q2-largest-detail"></span>
+                    </article>
+                    <article class="insight-card">
+                        <span class="insight-label">Top three groups</span>
+                        <strong id="q2-top-three">—</strong>
+                        <span class="insight-note">share of included hospitalisations</span>
+                    </article>
+                </div>
                 <div id="q2-chart" class="chart-card">
                     <p class="chart-error">Loading road user data…</p>
                 </div>

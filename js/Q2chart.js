@@ -39,10 +39,9 @@
 
   function showTooltip(event, datum) {
     const percent = d3.format(".1%")(datum.count / d3.sum(chartData, d => d.count));
-    const measure = currentMetric === "percentage"
-      ? `${percent} of included hospitalisations`
-      : `${formatValue(datum.count)} hospitalisations`;
-    tooltip.html(`<strong>${datum.name}</strong><br>${measure}`).style("opacity", 1);
+    tooltip
+      .html(`<strong>${datum.name}</strong><br>${formatValue(datum.count)} hospitalisations<br><span>${percent} of included total</span>`)
+      .style("opacity", 1);
     positionTooltip(event);
   }
 
@@ -61,15 +60,15 @@
       .attr("role", "img")
       .attr("aria-label", `Pie chart of hospitalisations by road user type, displayed as ${currentMetric === "count" ? "total numbers" : "percentages"}`);
 
-    totalLabel.text(`Dataset total: ${formatValue(total)}`);
+    totalLabel.text(formatValue(total));
     const pie = d3.pie()
       .sort(null)
       .value(d => d.count);
     const arc = d3.arc()
-      .innerRadius(0)
+      .innerRadius(72)
       .outerRadius(radius);
     const hoverArc = d3.arc()
-      .innerRadius(0)
+      .innerRadius(72)
       .outerRadius(radius + 10);
     const chart = svg.append("g").attr("transform", `translate(${centerX},${centerY})`);
     const slices = chart.selectAll(".pie-slice")
@@ -106,6 +105,18 @@
         clearActiveCategory();
         tooltip.style("opacity", 0);
       });
+
+    const center = chart.append("g")
+      .attr("class", "donut-center");
+    const centerTitle = center.append("text")
+      .attr("class", "donut-title")
+      .attr("y", -25);
+    const centerValue = center.append("text")
+      .attr("class", "donut-value")
+      .attr("y", 4);
+    const centerCaption = center.append("text")
+      .attr("class", "donut-caption")
+      .attr("y", 24);
 
     const legend = svg.append("g")
       .attr("transform", narrow ? `translate(24,${centerY + radius + 48})` : "translate(535,72)");
@@ -160,6 +171,8 @@
         ? d3.format(".1%")(d.count / total)
         : `${formatValue(d.count)} hospitalisations`);
 
+    updateDonutCenter(null);
+
     function activateCategory(name) {
       slices
         .interrupt()
@@ -170,6 +183,7 @@
       legendItems
         .classed("is-active", d => d.name === name)
         .classed("is-muted", d => d.name !== name);
+      updateDonutCenter(chartData.find(d => d.name === name));
     }
 
     function clearActiveCategory() {
@@ -180,6 +194,17 @@
         .attr("opacity", 1)
         .attr("d", arc);
       legendItems.classed("is-active", false).classed("is-muted", false);
+      updateDonutCenter(null);
+    }
+
+    function updateDonutCenter(datum) {
+      centerTitle
+        .attr("font-size", datum && datum.name.length > 18 ? 10 : 12)
+        .text(datum ? datum.name : "All road users");
+      centerValue.text(formatValue(datum ? datum.count : total));
+      centerCaption.text(datum
+        ? `${d3.format(".1%")(datum.count / total)} of total`
+        : "hospitalisations");
     }
   }
 
@@ -193,6 +218,22 @@
     }
 
     chartData = data;
+    const total = d3.sum(chartData, d => d.count);
+    const largest = chartData.reduce((highest, current) =>
+      current.count > highest.count ? current : highest
+    );
+    const topThreeCount = chartData
+      .slice()
+      .sort((a, b) => d3.descending(a.count, b.count))
+      .slice(0, 3)
+      .reduce((sum, d) => sum + d.count, 0);
+    totalLabel.text(formatValue(total));
+    d3.select("#q2-largest").text(largest.name);
+    d3.select("#q2-largest-detail").text(
+      `${formatValue(largest.count)} · ${d3.format(".1%")(largest.count / total)}`
+    );
+    d3.select("#q2-top-three").text(d3.format(".1%")(topThreeCount / total));
+
     d3.selectAll(".metric-btn").on("click", function () {
       currentMetric = this.dataset.metric;
       d3.selectAll(".metric-btn")

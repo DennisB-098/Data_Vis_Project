@@ -206,6 +206,54 @@ body {
     opacity: 0.9;
 }
 
+.chart-insights {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0 0 14px;
+}
+
+.insight-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+    padding: 11px 15px;
+    border-top: 3px solid #1689be;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.84);
+    box-shadow: 0 4px 12px rgba(40, 75, 104, 0.1);
+}
+
+.insight-card:nth-child(2) {
+    border-top-color: #b39b81;
+}
+
+.insight-card:nth-child(3) {
+    border-top-color: #0b3b8b;
+}
+
+.insight-label,
+.insight-note {
+    color: #526a78;
+    font-size: 0.78rem;
+}
+
+.insight-label {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.insight-card strong {
+    overflow: hidden;
+    color: #284b68;
+    font-size: clamp(1.05rem, 1.8vw, 1.45rem);
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .metric-controls {
     display: flex;
     gap: 10px;
@@ -300,6 +348,10 @@ body {
     stroke-width: 3;
 }
 
+.line-point.is-peak:not(.is-active) {
+    fill: #b39b81;
+}
+
 .chart-focus-line {
     stroke: #789db0;
     stroke-dasharray: 4 5;
@@ -323,6 +375,40 @@ body {
 
 .legend-item.is-active .legend-label {
     font-weight: 700;
+}
+
+.average-line {
+    stroke: #b39b81;
+    stroke-dasharray: 6 5;
+    stroke-width: 1.5;
+}
+
+.average-label {
+    fill: #806d59;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.donut-center {
+    pointer-events: none;
+    text-anchor: middle;
+}
+
+.donut-title {
+    fill: #526a78;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.donut-value {
+    fill: #284b68;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.donut-caption {
+    fill: #526a78;
+    font-size: 10px;
 }
 
 .q5-chart-page {
@@ -455,6 +541,23 @@ body {
 }
 
 @media (max-width: 700px) {
+    .chart-insights {
+        gap: 7px;
+    }
+
+    .insight-card {
+        padding: 9px;
+    }
+
+    .insight-label,
+    .insight-note {
+        font-size: 0.68rem;
+    }
+
+    .chart-header {
+        margin-bottom: 12px;
+    }
+
     .q5-chart-page .chart-header {
         align-items: flex-start;
     }
