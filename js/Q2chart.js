@@ -155,11 +155,14 @@
     }
 
     chartData = data;
-    d3.selectAll(".metric-button").on("click", function () {
+    d3.selectAll(".metric-btn").on("click", function () {
       currentMetric = this.dataset.metric;
-      d3.selectAll(".metric-button")
-        .classed("active", button => button === this)
-        .attr("aria-pressed", button => button === this ? "true" : "false");
+      d3.selectAll(".metric-btn")
+        .classed("active", false)
+        .attr("aria-pressed", "false");
+      d3.select(this)
+        .classed("active", true)
+        .attr("aria-pressed", "true");
       render();
     });
     window.addEventListener("resize", render);
