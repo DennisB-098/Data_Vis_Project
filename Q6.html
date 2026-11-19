@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospitalised Road Crash Cases by State</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="js/page-transition.js" defer></script>
+</head>
+
+<body>
+    <div class="presentation-container">
+        <div class="slide active" id="slide-chart">
+            <div class="navbar">
+                <a href="index.html">Home Page</a>
+                <a href="about.html">About</a>
+                <a href="appendix.html">Appendix</a>
+            </div>
+
+            <main class="chart-page-content q5-chart-page q6-chart-page">
+                <div class="chart-header">
+                    <div class="q6-chart-intro">
+                        <h2>How do hospitalised road crash cases vary across Australia?</h2>
+                        <p class="subtitle">Filter by road user and year; darker blue indicates more hospitalisations.</p>
+                    </div>
+                    <div class="chart-controls">
+                        <div class="q6-road-user-control">
+                            <label for="road-user-select">Road user</label>
+                            <select id="road-user-select">
+                                <option value="All">All road users</option>
+                                <option value="Car driver, passenger or unknown position">Car driver, passenger or unknown position</option>
+                                <option value="Motorcyclist">Motorcyclist</option>
+                                <option value="Pedal cyclist">Pedal cyclist</option>
+                                <option value="Pedestrian">Pedestrian</option>
+                                <option value="Bus occupant">Bus occupant</option>
+                                <option value="Heavy transport driver, passenger or unknown position">Heavy transport driver, passenger or unknown position</option>
+                                <option value="Other or unknown">Other or unknown</option>
+                                <option value="Pick-up truck or van occupant">Pick-up truck or van occupant</option>
+                            </select>
+                        </div>
+                        <div class="year-control">
+                            <div class="year-control-heading">
+                                <label for="year-slider">Calendar year</label>
+                                <output id="year-slider-value" for="year-slider" aria-live="polite">All</output>
+                            </div>
+                            <div class="year-slider-wrap">
+                                <input id="year-slider" type="range" min="0" max="11" step="1" value="11"
+                                    aria-label="Select calendar year or all years">
+                                <div id="year-slider-stops" class="year-slider-stops" aria-hidden="true"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="australia-map-container" class="chart-card"></div>
+            </main>
+        </div>
+    </div>
+
+    <a href="Q5.html" class="btn floating-prev-btn" aria-label="Previous page">← Previous</a>
+    <div id="chart-tooltip" class="tooltip" role="status" aria-live="polite"></div>
+    <script src="js/Q6chart.js"></script>
+</body>
+
+</html>
