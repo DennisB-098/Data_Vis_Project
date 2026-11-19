@@ -835,6 +835,13 @@ body:has(#slide-chart) .slide {
     overflow: visible;
 }
 
+.chart-source {
+    margin: 6px 0 0;
+    color: #666666;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
 .q4-page-navigation {
     display: flex;
     justify-content: space-between;
