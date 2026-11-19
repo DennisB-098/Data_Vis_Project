@@ -63,6 +63,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const selectedYearOutput = document.getElementById("year-slider-value");
     let selectedYear = "All";
     let selectedRoadUser = "All";
+    let mapSvg;
+    let mapPaths;
+    let mapLegend;
+    let mapGradientStops;
+    let mapRendered = false;
+    let stateTotals;
+    let selectedYearLabel;
+    let selectedRoadUserLabel;
 
     const parseRow = (row, index) => {
         const half = row[Q2_COLUMN_NAMES.half];
@@ -179,7 +187,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const formatCount = d3.format(",");
 
         function renderMap() {
-            const stateTotals = new Map(Q2_CHART_CONFIG.states.map(state => [state, 0]));
+            stateTotals = new Map(Q2_CHART_CONFIG.states.map(state => [state, 0]));
             yearlyData.forEach(row => {
                 if (selectedYear !== "All" && row.year !== selectedYear) return;
                 if (selectedRoadUser !== "All" && row.roadUser !== selectedRoadUser) return;
@@ -191,25 +199,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 .domain([0, maximum])
                 .interpolator(d3.interpolateBlues);
             const { width, height } = Q2_CHART_CONFIG;
-            const svg = container.html("").append("svg")
-                .attr("class", "q2-map-svg")
-                .attr("viewBox", `0 0 ${width} ${height}`)
-                .attr("role", "group")
-                .attr("aria-labelledby", "q2-map-title")
-                .attr("aria-describedby", "q2-map-description");
-
-            svg.append("title")
-                .attr("id", "q2-map-title")
-                .text("Australian hospitalised road crash cases choropleth");
-            svg.append("desc")
-                .attr("id", "q2-map-description")
-                .text(`Map shaded by total hospitalisations for ${selectedRoadUser === "All" ? "all road users" : selectedRoadUser}, ${selectedYear === "All" ? "all years" : selectedYear}. Darker blue indicates more cases. Focus a state to hear its total.`);
-
-            const projection = d3.geoMercator()
-                .fitExtent([[24, 48], [width - 24, height - 108]], geoJson);
-            const path = d3.geoPath(projection);
-            const selectedYearLabel = selectedYear === "All" ? "All Years" : selectedYear;
-            const selectedRoadUserLabel = selectedRoadUser === "All" ? "All road users" : selectedRoadUser;
+            selectedYearLabel = selectedYear === "All" ? "All Years" : selectedYear;
+            selectedRoadUserLabel = selectedRoadUser === "All" ? "All road users" : selectedRoadUser;
 
             function positionTooltip(event) {
                 tooltip
@@ -236,64 +227,112 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             }
 
-            svg.append("g")
-                .attr("class", "q2-map-states")
-                .selectAll("path")
-                .data(features)
-                .join("path")
-                .attr("class", "q2-map-state")
-                .attr("d", d => path(d.feature))
-                .attr("fill", d => colorScale(stateTotals.get(d.state)))
-                .attr("tabindex", 0)
-                .attr("role", "img")
-                .attr("aria-label", d =>
-                    `${Q2_CHART_CONFIG.stateNames[d.state]}. Year: ${selectedYearLabel}. ` +
-                    `Road user: ${selectedRoadUserLabel}. Total hospitalisations: ` +
-                    `${formatCount(stateTotals.get(d.state))}.`
-                )
-                .on("mouseenter", function (event, d) {
-                    showTooltip(this, d.state, event);
-                })
-                .on("mousemove", event => positionTooltip(event))
-                .on("mouseleave", () => tooltip.style("opacity", 0))
-                .on("focus", function (event, d) {
-                    showTooltip(this, d.state);
-                })
-                .on("blur", () => tooltip.style("opacity", 0));
+            if (!mapSvg) {
+                mapSvg = container.append("svg")
+                    .attr("class", "q2-map-svg")
+                    .attr("viewBox", `0 0 ${width} ${height}`)
+                    .attr("role", "group")
+                    .attr("aria-labelledby", "q2-map-title")
+                    .attr("aria-describedby", "q2-map-description");
 
-            const legendWidth = 250;
-            const legendX = (width - legendWidth) / 2;
-            const legendY = height - 57;
-            const gradient = svg.append("defs")
-                .append("linearGradient")
-                .attr("id", "q2-map-gradient");
-            gradient.append("stop").attr("offset", "0%").attr("stop-color", colorScale(0));
-            gradient.append("stop").attr("offset", "100%").attr("stop-color", colorScale(maximum));
+                mapSvg.append("title")
+                    .attr("id", "q2-map-title")
+                    .text("Australian hospitalised road crash cases choropleth");
+                mapSvg.append("desc").attr("id", "q2-map-description");
 
-            const legend = svg.append("g")
-                .attr("class", "q2-map-legend")
-                .attr("role", "img")
-                .attr("aria-label", `Color scale from 0 to ${formatCount(maximum)} hospitalisations`);
-            legend.append("text")
-                .attr("x", legendX)
-                .attr("y", legendY - 8)
-                .text("Hospitalisations");
-            legend.append("rect")
-                .attr("x", legendX)
-                .attr("y", legendY)
-                .attr("width", legendWidth)
-                .attr("height", 12)
-                .attr("rx", 4)
-                .attr("fill", "url(#q2-map-gradient)");
-            legend.append("text")
-                .attr("x", legendX)
-                .attr("y", legendY + 28)
+                const projection = d3.geoMercator()
+                    .fitExtent([[24, 48], [width - 24, height - 108]], geoJson);
+                const path = d3.geoPath(projection);
+
+                mapPaths = mapSvg.append("g")
+                    .attr("class", "q2-map-states")
+                    .selectAll("path")
+                    .data(features)
+                    .join("path")
+                    .attr("class", "q2-map-state")
+                    .attr("d", d => path(d.feature))
+                    .attr("fill", "#e7f0f8")
+                    .attr("opacity", 0)
+                    .attr("tabindex", 0)
+                    .attr("role", "img")
+                    .on("mouseenter", function (event, d) {
+                        showTooltip(this, d.state, event);
+                    })
+                    .on("mousemove", event => positionTooltip(event))
+                    .on("mouseleave", () => tooltip.style("opacity", 0))
+                    .on("focus", function (event, d) {
+                        showTooltip(this, d.state);
+                    })
+                    .on("blur", () => tooltip.style("opacity", 0));
+
+                const legendWidth = 250;
+                const legendX = (width - legendWidth) / 2;
+                const legendY = height - 57;
+                const gradient = mapSvg.append("defs")
+                    .append("linearGradient")
+                    .attr("id", "q2-map-gradient");
+                mapGradientStops = gradient.selectAll("stop")
+                    .data([
+                        { offset: "0%", value: 0 },
+                        { offset: "100%", value: 1 }
+                    ])
+                    .join("stop")
+                    .attr("offset", d => d.offset);
+
+                mapLegend = mapSvg.append("g")
+                    .attr("class", "q2-map-legend")
+                    .attr("role", "img")
+                    .attr("opacity", 0);
+                mapLegend.append("text")
+                    .attr("x", legendX)
+                    .attr("y", legendY - 8)
+                    .text("Hospitalisations");
+                mapLegend.append("rect")
+                    .attr("x", legendX)
+                    .attr("y", legendY)
+                    .attr("width", legendWidth)
+                    .attr("height", 12)
+                    .attr("rx", 4)
+                    .attr("fill", "url(#q2-map-gradient)");
+                mapLegend.append("text")
+                    .attr("class", "q2-map-legend-min")
+                    .attr("x", legendX)
+                    .attr("y", legendY + 28);
+                mapLegend.append("text")
+                    .attr("class", "q2-map-legend-max")
+                    .attr("x", legendX + legendWidth)
+                    .attr("y", legendY + 28)
+                    .attr("text-anchor", "end");
+            }
+
+            mapSvg.select("#q2-map-description")
+                .text(`Map shaded by total hospitalisations for ${selectedRoadUserLabel}, ${selectedYearLabel}. Darker blue indicates more cases. Focus a state to hear its total.`);
+
+            mapPaths.attr("aria-label", d =>
+                `${Q2_CHART_CONFIG.stateNames[d.state]}. Year: ${selectedYearLabel}. ` +
+                `Road user: ${selectedRoadUserLabel}. Total hospitalisations: ` +
+                `${formatCount(stateTotals.get(d.state))}.`
+            );
+            mapLegend
+                .attr("aria-label", `Color scale from 0 to ${formatCount(maximum)} hospitalisations`)
+                .select(".q2-map-legend-min")
                 .text("0");
-            legend.append("text")
-                .attr("x", legendX + legendWidth)
-                .attr("y", legendY + 28)
-                .attr("text-anchor", "end")
-                .text(formatCount(maximum));
+            mapLegend.select(".q2-map-legend-max").text(formatCount(maximum));
+
+            const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                ? 0
+                : mapRendered ? 450 : 800;
+            const transition = d3.transition()
+                .duration(duration)
+                .ease(d3.easeCubicOut);
+
+            mapPaths.transition(transition)
+                .attr("fill", d => colorScale(stateTotals.get(d.state)))
+                .attr("opacity", 1);
+            mapGradientStops.transition(transition)
+                .attr("stop-color", d => colorScale(d.value === 0 ? 0 : maximum));
+            mapLegend.transition(transition).attr("opacity", 1);
+            mapRendered = true;
         }
 
         yearSlider.max = String(Q2_CHART_CONFIG.years.length);
