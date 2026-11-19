@@ -1431,6 +1431,19 @@ html.page-exit-to-right body {
     outline-offset: 2px;
 }
 
+#heatmap-container rect:focus-visible,
+.butterfly-bar:focus-visible {
+    outline: none;
+    stroke: #17364b;
+    stroke-width: 3px;
+}
+
+.metric-btn:focus-visible,
+.btn:focus-visible {
+    outline: 3px solid #284b68;
+    outline-offset: 3px;
+}
+
 #australia-map-container {
     display: flex;
     height: min(590px, 63vh);

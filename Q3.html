@@ -25,10 +25,13 @@
                     <div>
                         <h2>Counterparty Crash Configurations and Average Hospitalizations</h2>
                     </div>
-                    <div class="metric-controls">
-                        <button class="btn metric-btn active" data-metric="Average_Bed_Days">Avg Bed Days</button>
-                        <button class="btn metric-btn" data-metric="Sum(Count of cases)">Total Cases</button>
-                        <button class="btn metric-btn" data-metric="Sum(Bed days)">Total Bed Days</button>
+                    <div class="metric-controls" role="group" aria-label="Select chart metric">
+                        <button class="btn metric-btn active" type="button" data-metric="Average_Bed_Days"
+                            aria-pressed="true">Avg Bed Days</button>
+                        <button class="btn metric-btn" type="button" data-metric="Sum(Count of cases)"
+                            aria-pressed="false">Total Cases</button>
+                        <button class="btn metric-btn" type="button" data-metric="Sum(Bed days)"
+                            aria-pressed="false">Total Bed Days</button>
                     </div>
                 </div>
 
@@ -40,7 +43,7 @@
 
 <a href="Q2.html" class="btn floating-prev-btn" aria-label="Previous page">← Previous</a>
     <a href="Q4.html" class="btn floating-next-btn" aria-label="Next page">Next →</a>
-    <div id="chart-tooltip" class="tooltip"></div>
+    <div id="chart-tooltip" class="tooltip" role="status" aria-live="polite"></div>
     <script src="js/Q3chart.js"></script>
 </body>
 

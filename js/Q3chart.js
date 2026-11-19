@@ -33,6 +33,9 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.addEventListener("click", () => {
                 document.querySelectorAll(".metric-btn").forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
+                document.querySelectorAll(".metric-btn").forEach(b => {
+                    b.setAttribute("aria-pressed", String(b === btn));
+                });
                 currentMetric = btn.getAttribute("data-metric");
                 renderChart(currentMetric);
                 renderTable(currentMetric);
@@ -56,11 +59,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const sortedData = [...rawData].sort((a, b) => d3.descending(a[metric], b[metric]));
 
-        const svg = d3.select("#bar-chart-container")
+        const chartSvg = d3.select("#bar-chart-container")
             .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
-            .append("g")
+            .attr("role", "group")
+            .attr("aria-labelledby", "q3-chart-title")
+            .attr("aria-describedby", "q3-chart-description");
+
+        chartSvg.append("title")
+            .attr("id", "q3-chart-title")
+            .text(`Counterparty crash configurations by ${metricMeta[metric].label}`);
+        chartSvg.append("desc")
+            .attr("id", "q3-chart-description")
+            .text("Horizontal bars compare counterparty crash configurations. Focus a bar to hear its average bed days, total cases, and total bed days.");
+
+        const svg = chartSvg.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
         const x = d3.scaleLinear()
@@ -167,7 +181,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const table = d3.select(tableContainer)
             .append("table")
-            .attr("class", "data-table");
+            .attr("class", "data-table")
+            .attr("aria-label", `Counterparty data sorted by ${metricMeta[metric].label}`);
 
         table.append("thead")
             .append("tr")
@@ -175,6 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .data(columns)
             .enter()
             .append("th")
+            .attr("scope", "col")
             .attr("class", d => d.key === "Counterparty" ? null : "num")
             .text(d => d.label);
 

@@ -72,12 +72,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const svg = d3.select(container)
             .append("svg")
             .attr("viewBox", `0 0 ${width} ${height}`)
-            .attr("role", "img")
-            .attr("aria-label", title)
+            .attr("role", "group")
+            .attr("aria-labelledby", "heatmap-title")
             .attr("aria-describedby", "heatmap-description")
             .style("opacity", 0);
 
-        svg.append("title").text(title);
+        svg.append("title")
+            .attr("id", "heatmap-title")
+            .text(title);
         svg.append("desc")
             .attr("id", "heatmap-description")
             .text(isDrilldown
@@ -113,6 +115,15 @@ document.addEventListener("DOMContentLoaded", () => {
             .domain([minStay, maxStay])
             .interpolator(d3.interpolateReds);
 
+        const showTooltip = d => {
+            tooltip
+                .style("opacity", 1)
+                .html(`<strong>Age group:</strong> ${d.ageGroup}<br>
+                       <strong>${isDrilldown ? "Period" : "Year"}:</strong> ${isDrilldown ? formatPeriod(d.period) : d.year}<br>
+                       ${isDrilldown ? `<strong>Year:</strong> ${d.year}<br>` : ""}
+                       <strong>Average stay:</strong> ${d.stay.toFixed(2)} days`);
+        };
+
         innerChart.selectAll("rect")
             .data(viewData)
             .join("rect")
@@ -124,19 +135,14 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("ry", 3)
             .attr("fill", d => colorScale(d.stay))
             .attr("role", isDrilldown ? "img" : "button")
-            .attr("tabindex", isDrilldown ? null : 0)
+            .attr("tabindex", 0)
             .attr("aria-label", d => isDrilldown
                 ? `${d.ageGroup}, ${formatPeriod(d.period)} ${d.year}: ${d.stay.toFixed(2)} days`
                 : `View half-year average stay for ${d.ageGroup} in ${d.year}: ${d.stay.toFixed(2)} days`
             )
             .style("cursor", isDrilldown ? "default" : "pointer")
             .on("mouseenter", (event, d) => {
-                tooltip
-                    .style("opacity", 1)
-                    .html(`<strong>Age group:</strong> ${d.ageGroup}<br>
-                           <strong>${isDrilldown ? "Period" : "Year"}:</strong> ${isDrilldown ? formatPeriod(d.period) : d.year}<br>
-                           ${isDrilldown ? `<strong>Year:</strong> ${d.year}<br>` : ""}
-                           <strong>Average stay:</strong> ${d.stay.toFixed(2)} days`);
+                showTooltip(d);
             })
             .on("mousemove", event => {
                 tooltip
@@ -144,6 +150,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     .style("top", `${event.pageY - 70}px`);
             })
             .on("mouseleave", () => {
+                tooltip.style("opacity", 0);
+            })
+            .on("focus", function (event, d) {
+                showTooltip(d);
+                const bounds = this.getBoundingClientRect();
+                tooltip
+                    .style("left", `${window.scrollX + bounds.left + bounds.width / 2 + 15}px`)
+                    .style("top", `${window.scrollY + bounds.top - 70}px`);
+            })
+            .on("blur", () => {
                 tooltip.style("opacity", 0);
             })
             .on("click", (event, d) => {

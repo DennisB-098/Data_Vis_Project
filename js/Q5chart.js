@@ -135,10 +135,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         const chartSvg = d3.select(container)
             .append("svg")
             .attr("viewBox", `0 0 ${width} ${height}`)
-            .attr("role", "img")
-            .attr("aria-label", "Hospitalisations by Sex and Age Group");
+            .attr("role", "group")
+            .attr("aria-labelledby", "q5-chart-title")
+            .attr("aria-describedby", "q5-chart-description");
 
-        const svgTitle = chartSvg.append("title");
+        const svgTitle = chartSvg.append("title")
+            .attr("id", "q5-chart-title");
+        const svgDescription = chartSvg.append("desc")
+            .attr("id", "q5-chart-description");
         const visibleTitle = chartSvg.append("text")
             .attr("class", "butterfly-chart-title")
             .attr("x", width / 2)
@@ -247,8 +251,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 .tickPadding(9)
                 .tickFormat(value => formatValue(Math.abs(value)));
 
-            chartSvg.attr("aria-label", title);
             svgTitle.text(title);
+            svgDescription.text(
+                `${title} for ${getSelectedYear() === "All" ? "all years" : getSelectedYear()}. ` +
+                "Male bars extend left and female bars extend right. Focus a bar to hear its value."
+            );
             visibleTitle.text(title);
 
             chartSvg.select(".butterfly-axis-label")
