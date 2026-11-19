@@ -276,6 +276,156 @@ body {
     transition: opacity 0.15s ease;
     z-index: 100;
 }
+
+.q5-chart-page {
+    overflow: visible;
+}
+
+.q5-chart-page .chart-header {
+    align-items: center;
+}
+
+.q5-chart-page .chart-controls {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+
+.q5-chart-page .year-control {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #3b5668;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.q5-chart-page .year-control select {
+    min-width: 130px;
+    padding: 10px 14px;
+    border: 1px solid #8fa6b3;
+    border-radius: 8px;
+    background: #fff;
+    color: #284b68;
+    font: inherit;
+}
+
+.q5-chart-page .metric-controls {
+    flex-wrap: wrap;
+}
+
+.q5-chart-page .metric-btn[aria-pressed="true"] {
+    background-color: #284b68;
+    color: #ffffff;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+.q5-chart-page .metric-btn:focus-visible {
+    outline: 3px solid #284b68;
+    outline-offset: 3px;
+}
+
+#butterfly-chart-container {
+    height: min(590px, 68vh);
+    min-height: 390px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#butterfly-chart-container svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.butterfly-axis text {
+    fill: #3b5668;
+    font-size: 12px;
+}
+
+.butterfly-axis path {
+    stroke: #8fa6b3;
+}
+
+.butterfly-axis .tick line {
+    stroke: #dce5ea;
+    stroke-dasharray: 3, 3;
+}
+
+.butterfly-y-axis .tick line {
+    display: none;
+}
+
+.butterfly-zero-line {
+    stroke: #284b68;
+    stroke-width: 2;
+}
+
+.butterfly-axis-label {
+    fill: #3b5668;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.butterfly-legend {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin: 0 auto 12px;
+    color: #3b5668;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+.legend-male {
+    background: #3977a8;
+}
+
+.legend-female {
+    background: #d65b78;
+}
+
+.chart-error {
+    color: #9b263c;
+    font-weight: 600;
+}
+
+@media (max-width: 700px) {
+    .q5-chart-page .chart-header {
+        align-items: flex-start;
+    }
+
+    .q5-chart-page .chart-controls {
+        justify-content: flex-start;
+    }
+
+    #butterfly-chart-container {
+        height: 470px;
+        min-height: 360px;
+        padding: 8px;
+    }
+
+    .butterfly-axis text {
+        font-size: 10px;
+    }
+}
+
 body:has(#slide-chart) {
     height: auto;
     min-height: 100vh;
@@ -352,6 +502,36 @@ body:has(#slide-chart) .slide {
     font-weight: bold;
     color: #284b68;
 }
+
+#heatmap-container {
+    height: 540px;
+    flex-grow: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#heatmap-container svg {
+    width: 100%;
+    height: 100%;
+}
+
+#heatmap-container rect {
+    stroke: #ffffff;
+    stroke-width: 1;
+    transition: opacity 0.15s ease;
+}
+
+#heatmap-container rect:hover {
+    opacity: 0.75;
+}
+
+.axis-label {
+    fill: #3b5668;
+    font-size: 13px;
+    font-weight: 600;
+}
+
 .floating-next-btn {
     position: fixed;
     right: 35px;
@@ -370,4 +550,125 @@ body:has(#slide-chart) .slide {
 .floating-next-btn:hover {
     background-color: #a99580;
     transform: translateY(-2px);
+
+}
+
+.about-section {
+    padding: 30px 40px;
+    background-color: #c2ccd0;
+    min-height: 80vh;
+}
+
+.about-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+}
+
+.about-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #1d2f43;
+}
+
+.about-header .subtitle {
+    margin: 5px 0 0;
+    color: #3b4d5e;
+    font-size: 0.95rem;
+}
+
+.group-badge {
+    background-color: #1d2f43;
+    color: #ffffff;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.team-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.member-card {
+    background-color: #ffffff;
+    border-radius: 4px; 
+    border: 2px solid #1d2f43; 
+    padding: 20px 25px;
+    box-shadow: 0 4px 12px rgba(29, 47, 67, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    transition: transform 0.2s ease;
+}
+
+.member-card:hover {
+    transform: translateY(-2px);
+}
+
+.member-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 2px solid #1d2f43;
+    flex-shrink: 0;
+    background-color: #e2ebf0;
+}
+
+.member-info {
+    flex-grow: 1;
+}
+
+.member-name {
+    margin: 0 0 4px;
+    font-size: 1.25rem;
+    color: #1d2f43;
+}
+
+.member-id {
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+    color: #5c7080;
+    font-weight: 500;
+}
+
+.member-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.contact-pill {
+    padding: 6px 12px;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.contact-pill.github {
+    background-color: #1d2f43;
+    color: #ffffff;
+}
+
+.contact-pill.github:hover {
+    background-color: #2f4b6a;
+}
+
+.contact-pill.email {
+    background-color: #eef3f6;
+    color: #1d2f43;
+    border: 1px solid #d0dce3;
+}
+
+.contact-pill.email:hover {
+    background-color: #dce6ec;
 }
