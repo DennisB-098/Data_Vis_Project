@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Annual road injury hospitalisations in Australia</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="js/page-transition.js" defer></script>
 </head>
+
 <body>
     <div class="presentation-container">
         <div class="slide active" id="slide-chart">
@@ -20,7 +23,8 @@
                 <div class="chart-header">
                     <div>
                         <h2>How have road injury hospitalisations changed over time?</h2>
-                        <p class="subtitle">Annual hospitalisations in Australia, 2011–2021. Hover over a point or focus it with Tab to explore exact values.</p>
+                        <p class="subtitle">Annual hospitalisations in Australia, 2011–2021. Hover over a point or focus
+                            it with Tab to explore exact values.</p>
                     </div>
                 </div>
                 <div class="chart-insights" aria-label="Annual hospitalisation summary">
@@ -47,8 +51,10 @@
         </div>
     </div>
 
+    <a href="index.html" class="btn floating-next-btn previous">← Previous</a>
     <a href="Q2.html" class="btn floating-next-btn">Next →</a>
     <div id="chart-tooltip" class="tooltip"></div>
     <script src="js/Q1chart.js"></script>
 </body>
+
 </html>
