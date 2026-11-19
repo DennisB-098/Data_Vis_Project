@@ -264,6 +264,12 @@
       updateSelectionStatus();
     }
 
+    clearSelectionButton.on("click", () => {
+      selectedCategory = null;
+      clearActiveCategory();
+      tooltip.style("opacity", 0);
+    });
+
     function updateDonutCenter(datum) {
       centerTitle
         .attr("font-size", datum && datum.name.length > 18 ? 10 : 12)
@@ -309,10 +315,6 @@
       d3.select(this)
         .classed("active", true)
         .attr("aria-pressed", "true");
-      render();
-    });
-    clearSelectionButton.on("click", () => {
-      selectedCategory = null;
       render();
     });
     window.addEventListener("resize", render);
