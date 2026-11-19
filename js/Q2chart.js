@@ -1,326 +1,318 @@
-(() => {
-  const container = d3.select("#q2-chart");
-  const tooltip = d3.select("#chart-tooltip");
-  const totalLabel = d3.select("#q2-total");
-  const clearSelectionButton = d3.select("#q2-clear-selection");
-  const selectionStatus = d3.select("#q2-selection-status");
-  const defaultSelectionStatus = "Hover or focus a group to preview it, then click or tap to pin its details.";
-  const formatValue = d3.format(",");
-  const colors = {
-    "Car occupant": "#263d54",
-    "Motorcyclist": "#0b3b8b",
-    "Pedal cyclist": "#1689be",
-    "Pedestrian": "#b39b81",
-    "Other or unknown": "#d9f3f5",
-    "Heavy transport occupant": "#687f87",
-    "Pick-up truck or van occupant": "#789db0",
-    "Bus occupant": "#d7bda0"
-  };
-  let chartData = [];
-  let currentMetric = "count";
-  let selectedCategory = null;
+const Q2_CHART_CONFIG = {
+    dataPath: "Data/q2_clean.csv",
+    geoJsonPath: "https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson",
+    years: d3.range(2011, 2022),
+    roadUsers: [
+        "Car driver, passenger or unknown position",
+        "Motorcyclist",
+        "Pedal cyclist",
+        "Pedestrian",
+        "Bus occupant",
+        "Heavy transport driver, passenger or unknown position",
+        "Other or unknown",
+        "Pick-up truck or van occupant"
+    ],
+    states: ["ACT", "NSW", "NT", "Qld", "SA", "Tas", "Vic", "WA"],
+    stateNames: {
+        ACT: "Australian Capital Territory",
+        NSW: "New South Wales",
+        NT: "Northern Territory",
+        Qld: "Queensland",
+        SA: "South Australia",
+        Tas: "Tasmania",
+        Vic: "Victoria",
+        WA: "Western Australia"
+    },
+    width: 1000,
+    height: 620
+};
 
-  function showError(message) {
-    container.html("").append("p").attr("class", "chart-error").text(message);
-  }
+const Q2_STATE_CODES_BY_NAME = {
+    "australian capital territory": "ACT",
+    "new south wales": "NSW",
+    "northern territory": "NT",
+    queensland: "Qld",
+    "south australia": "SA",
+    tasmania: "Tas",
+    victoria: "Vic",
+    "western australia": "WA",
+    act: "ACT",
+    nsw: "NSW",
+    nt: "NT",
+    qld: "Qld",
+    sa: "SA",
+    tas: "Tas",
+    vic: "Vic",
+    wa: "WA"
+};
 
-  function positionTooltip(event) {
-    const node = tooltip.node();
-    const bounds = node.getBoundingClientRect();
-    const pointerX = event.pageX != null ? event.pageX : event.clientX + window.scrollX;
-    const pointerY = event.pageY != null ? event.pageY : event.clientY + window.scrollY;
-    let left = pointerX + 14;
-    let top = pointerY - bounds.height - 12;
+const Q2_COLUMN_NAMES = {
+    half: "6-monthly (#1)",
+    roadUser: "road user",
+    state: "state or territory (#1)",
+    year: "calendar year (#1)",
+    cases: "Sum(count of cases excluding died in hospitals within 30 days (#1))"
+};
 
-    if (left + bounds.width > window.scrollX + window.innerWidth - 8) {
-      left = pointerX - bounds.width - 14;
-    }
-    if (top < window.scrollY + 8) {
-      top = pointerY + 14;
-    }
-    tooltip.style("left", `${left}px`).style("top", `${top}px`);
-  }
+document.addEventListener("DOMContentLoaded", async () => {
+    const container = d3.select("#australia-map-container");
+    const tooltip = d3.select("#chart-tooltip");
+    const roadUserSelect = document.getElementById("road-user-select");
+    const yearSlider = document.getElementById("year-slider");
+    const yearStops = document.getElementById("year-slider-stops");
+    const selectedYearOutput = document.getElementById("year-slider-value");
+    let selectedYear = "All";
+    let selectedRoadUser = "All";
 
-  function showTooltip(event, datum) {
-    const percent = d3.format(".1%")(datum.count / d3.sum(chartData, d => d.count));
-    tooltip
-      .html(`<strong>${datum.name}</strong><br>${formatValue(datum.count)} hospitalisations<br><span>${percent} of included total</span>`)
-      .style("opacity", 1);
-    positionTooltip(event);
-  }
+    const parseRow = (row, index) => {
+        const half = row[Q2_COLUMN_NAMES.half];
+        const roadUser = row[Q2_COLUMN_NAMES.roadUser];
+        const state = row[Q2_COLUMN_NAMES.state];
+        const year = Number(row[Q2_COLUMN_NAMES.year]);
+        const casesText = row[Q2_COLUMN_NAMES.cases];
+        const cases = Number(casesText);
 
-  function render() {
-    const narrow = container.node().clientWidth < 620;
-    const width = narrow ? 420 : 900;
-    const height = narrow ? 700 : 500;
-    const centerX = narrow ? 210 : 290;
-    const centerY = narrow ? 190 : 250;
-    const radius = narrow ? 165 : 190;
-    const total = d3.sum(chartData, d => d.count);
-    let activeCategory = null;
-    const svg = container.html("").append("svg")
-      .attr("viewBox", `0 0 ${width} ${height}`)
-      .style("width", "100%")
-      .style("height", "auto")
-      .attr("role", "group")
-      .attr("aria-label", `Interactive donut chart of hospitalisations by road user type, displayed as ${currentMetric === "count" ? "total numbers" : "percentages"}`);
-
-    totalLabel.text(formatValue(total));
-    const pie = d3.pie()
-      .sort(null)
-      .value(d => d.count);
-    const arc = d3.arc()
-      .innerRadius(72)
-      .outerRadius(radius);
-    const hoverArc = d3.arc()
-      .innerRadius(72)
-      .outerRadius(radius + 10);
-    const chart = svg.append("g").attr("transform", `translate(${centerX},${centerY})`);
-    const slices = chart.selectAll(".pie-slice")
-      .data(pie(chartData))
-      .join("path")
-      .attr("class", "pie-slice")
-      .attr("d", arc)
-      .attr("fill", d => colors[d.data.name] || "#789db0")
-      .attr("stroke", "#ffffff")
-      .attr("stroke-width", 2)
-      .attr("tabindex", 0)
-      .attr("role", "button")
-      .attr("aria-pressed", d => selectedCategory === d.data.name ? "true" : "false")
-      .attr("aria-label", d => `${d.data.name}: ${formatValue(d.data.count)} hospitalisations, ${d3.format(".1%")(d.data.count / total)}. Click to pin details.`)
-      .on("pointerenter", (event, datum) => {
-        activateCategory(datum.data.name);
-        showTooltip(event, datum.data);
-      })
-      .on("pointermove", (event, datum) => showTooltip(event, datum.data))
-      .on("pointerleave", () => {
-        clearActiveCategory();
-        tooltip.style("opacity", 0);
-      })
-      .on("click", (event, datum) => {
-        event.stopPropagation();
-        toggleCategory(datum.data.name);
-      })
-      .on("keydown", (event, datum) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          toggleCategory(datum.data.name);
+        if (!["Jan-Jun", "Jul-Dec"].includes(half)) {
+            throw new Error(`Unexpected half-year value in CSV row ${index + 2}.`);
         }
-      })
-      .on("focus", function (event, datum) {
-        activateCategory(datum.data.name);
-        const bounds = this.getBoundingClientRect();
-        showTooltip({
-          clientX: bounds.left + bounds.width / 2,
-          clientY: bounds.top,
-          pageX: window.scrollX + bounds.left + bounds.width / 2,
-          pageY: window.scrollY + bounds.top
-        }, datum.data);
-      })
-      .on("blur", () => {
-        clearActiveCategory();
-        tooltip.style("opacity", 0);
-      });
-
-    const center = chart.append("g")
-      .attr("class", "donut-center");
-    const centerTitle = center.append("text")
-      .attr("class", "donut-title")
-      .attr("y", -25);
-    const centerValue = center.append("text")
-      .attr("class", "donut-value")
-      .attr("y", 4);
-    const centerCaption = center.append("text")
-      .attr("class", "donut-caption")
-      .attr("y", 24);
-
-    const legend = svg.append("g")
-      .attr("transform", narrow ? `translate(24,${centerY + radius + 48})` : "translate(535,72)");
-    const legendItems = legend.selectAll(".legend-item")
-      .data(chartData)
-      .join("g")
-      .attr("class", "legend-item")
-      .attr("transform", (d, index) => `translate(0,${index * (narrow ? 34 : 48)})`)
-      .attr("tabindex", 0)
-      .attr("role", "button")
-      .attr("aria-pressed", d => selectedCategory === d.name ? "true" : "false")
-      .attr("aria-label", d => `${d.name}, ${formatValue(d.count)} hospitalisations, ${d3.format(".1%")(d.count / total)}. Click to pin details.`)
-      .on("pointerenter", (event, datum) => {
-        activateCategory(datum.name);
-        showTooltip(event, datum);
-      })
-      .on("pointermove", showTooltip)
-      .on("pointerleave", () => {
-        clearActiveCategory();
-        tooltip.style("opacity", 0);
-      })
-      .on("click", (event, datum) => {
-        event.stopPropagation();
-        toggleCategory(datum.name);
-      })
-      .on("keydown", (event, datum) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          toggleCategory(datum.name);
+        if (!Q2_CHART_CONFIG.roadUsers.includes(roadUser)) {
+            throw new Error(`Unexpected road user in CSV row ${index + 2}.`);
         }
-      })
-      .on("focus", (event, datum) => {
-        activateCategory(datum.name);
-        const bounds = event.currentTarget.getBoundingClientRect();
-        showTooltip({
-          clientX: bounds.left + bounds.width / 2,
-          clientY: bounds.top,
-          pageX: window.scrollX + bounds.left + bounds.width / 2,
-          pageY: window.scrollY + bounds.top
-        }, datum);
-      })
-      .on("blur", () => {
-        clearActiveCategory();
-        tooltip.style("opacity", 0);
-      });
+        if (!Q2_CHART_CONFIG.states.includes(state)) {
+            throw new Error(`Unexpected state or territory in CSV row ${index + 2}.`);
+        }
+        if (!Q2_CHART_CONFIG.years.includes(year) || !Number.isInteger(year)) {
+            throw new Error(`Invalid calendar year in CSV row ${index + 2}.`);
+        }
+        if (casesText === "" || !Number.isInteger(cases) || cases < 0) {
+            throw new Error(`Invalid hospitalisation count in CSV row ${index + 2}.`);
+        }
 
-    legendItems.append("circle")
-      .attr("cx", 8)
-      .attr("cy", 0)
-      .attr("r", 7)
-      .attr("fill", d => colors[d.name] || "#789db0");
-    legendItems.append("text")
-      .attr("class", "legend-label")
-      .attr("x", 24)
-      .attr("y", 4)
-      .text(d => d.name);
-    legendItems.append("text")
-      .attr("class", "legend-label")
-      .attr("x", 24)
-      .attr("y", 21)
-      .attr("font-size", 11)
-      .text(d => currentMetric === "percentage"
-        ? d3.format(".1%")(d.count / total)
-        : `${formatValue(d.count)} hospitalisations`);
+        return { half, roadUser, state, year, cases };
+    };
 
-    updateSelectionStatus();
-    if (selectedCategory) {
-      activateCategory(selectedCategory);
-    } else {
-      updateDonutCenter(null);
+    function aggregateYearlyCases(rows) {
+        const totalsByStateAndUser = d3.rollup(
+            rows,
+            yearRows => d3.sum(yearRows, row => row.cases),
+            row => row.state,
+            row => row.roadUser,
+            row => row.year
+        );
+        const yearlyData = [];
+
+        totalsByStateAndUser.forEach((roadUserMap, state) => {
+            roadUserMap.forEach((yearMap, roadUser) => {
+                yearMap.forEach((cases, year) => {
+                    yearlyData.push({ state, roadUser, year, cases });
+                });
+            });
+        });
+
+        return yearlyData;
     }
 
-    function toggleCategory(name) {
-      selectedCategory = selectedCategory === name ? null : name;
-      if (selectedCategory) {
-        activateCategory(selectedCategory);
-      } else if (activeCategory) {
-        activateCategory(activeCategory);
-      } else {
-        clearActiveCategory();
-      }
-      updateSelectionStatus();
+    function addYearStops() {
+        [...Q2_CHART_CONFIG.years.map(String), "All"].forEach((year, index) => {
+            const stop = document.createElement("span");
+            stop.className = "year-slider-stop";
+            stop.dataset.year = year;
+            if (index === Q2_CHART_CONFIG.years.length) {
+                stop.classList.add("all-stop");
+            }
+            stop.setAttribute("aria-hidden", "true");
+            const dot = document.createElement("span");
+            dot.className = "year-slider-dot";
+            const label = document.createElement("span");
+            label.className = "year-slider-label";
+            label.textContent = year;
+            stop.append(dot, label);
+            yearStops.appendChild(stop);
+        });
     }
 
-    function updateSelectionStatus(previewName) {
-      clearSelectionButton.property("hidden", !selectedCategory);
-      selectionStatus.text(selectedCategory
-        ? previewName && previewName !== selectedCategory
-          ? `${selectedCategory} pinned; previewing ${previewName}.`
-          : `${selectedCategory} pinned. Click or tap it again, or use Clear highlight.`
-        : defaultSelectionStatus);
+    function updateYearSlider() {
+        const selectedIndex = Number(yearSlider.value);
+        selectedYear = selectedIndex === Q2_CHART_CONFIG.years.length
+            ? "All"
+            : Q2_CHART_CONFIG.years[selectedIndex];
+        const selectedLabel = selectedYear === "All" ? "All Years" : String(selectedYear);
+        selectedYearOutput.textContent = selectedLabel;
+        yearSlider.setAttribute("aria-valuetext", selectedLabel);
+        yearStops.querySelectorAll(".year-slider-stop").forEach((stop, index) => {
+            stop.classList.toggle("is-selected", index === selectedIndex);
+        });
     }
 
-    function activateCategory(name) {
-      activeCategory = name;
-      slices
-        .interrupt()
-        .transition()
-        .duration(160)
-        .attr("opacity", d => d.data.name === name ? 1 : 0.35)
-        .attr("d", d => d.data.name === name ? hoverArc(d) : arc(d));
-      slices.attr("aria-pressed", d => selectedCategory === d.data.name ? "true" : "false");
-      legendItems
-        .classed("is-active", d => d.name === name)
-        .classed("is-muted", d => d.name !== name)
-        .attr("aria-pressed", d => selectedCategory === d.name ? "true" : "false");
-      updateDonutCenter(chartData.find(d => d.name === name));
-      updateSelectionStatus(name);
+    function resolveStateCode(feature) {
+        const properties = feature.properties || {};
+        const geoName = properties.STATE_NAME || properties.state || properties.STATE ||
+            properties.name || properties.NAME_1;
+        const stateCode = geoName && Q2_STATE_CODES_BY_NAME[String(geoName).trim().toLowerCase()];
+        if (!stateCode) {
+            throw new Error(`Unable to match GeoJSON feature "${geoName || "unknown"}" to an Australian state or territory.`);
+        }
+        return stateCode;
     }
 
-    function clearActiveCategory() {
-      if (selectedCategory) {
-        activateCategory(selectedCategory);
-        return;
-      }
-      activeCategory = null;
-      slices
-        .interrupt()
-        .transition()
-        .duration(160)
-        .attr("opacity", 1)
-        .attr("d", arc);
-      slices.attr("aria-pressed", "false");
-      legendItems
-        .classed("is-active", false)
-        .classed("is-muted", false)
-        .attr("aria-pressed", "false");
-      updateDonutCenter(null);
-      updateSelectionStatus();
+    try {
+        const [sourceRows, geoJson] = await Promise.all([
+            d3.csv(Q2_CHART_CONFIG.dataPath, parseRow),
+            d3.json(Q2_CHART_CONFIG.geoJsonPath)
+        ]);
+
+        if (!sourceRows.length) {
+            throw new Error("The Q2 CSV contains no data rows.");
+        }
+        if (!geoJson || geoJson.type !== "FeatureCollection" || !Array.isArray(geoJson.features)) {
+            throw new Error("The Australia GeoJSON is not a valid FeatureCollection.");
+        }
+
+        const features = geoJson.features.map(feature => ({ feature, state: resolveStateCode(feature) }));
+        const mappedStates = new Set(features.map(d => d.state));
+        const missingStates = Q2_CHART_CONFIG.states.filter(state => !mappedStates.has(state));
+        if (missingStates.length) {
+            throw new Error(`The Australia GeoJSON is missing: ${missingStates.join(", ")}.`);
+        }
+
+        const yearlyData = aggregateYearlyCases(sourceRows);
+        const formatCount = d3.format(",");
+
+        function renderMap() {
+            const stateTotals = new Map(Q2_CHART_CONFIG.states.map(state => [state, 0]));
+            yearlyData.forEach(row => {
+                if (selectedYear !== "All" && row.year !== selectedYear) return;
+                if (selectedRoadUser !== "All" && row.roadUser !== selectedRoadUser) return;
+                stateTotals.set(row.state, stateTotals.get(row.state) + row.cases);
+            });
+
+            const maximum = d3.max(stateTotals.values()) || 1;
+            const colorScale = d3.scaleSequential()
+                .domain([0, maximum])
+                .interpolator(d3.interpolateBlues);
+            const { width, height } = Q2_CHART_CONFIG;
+            const svg = container.html("").append("svg")
+                .attr("class", "q2-map-svg")
+                .attr("viewBox", `0 0 ${width} ${height}`)
+                .attr("role", "group")
+                .attr("aria-labelledby", "q2-map-title")
+                .attr("aria-describedby", "q2-map-description");
+
+            svg.append("title")
+                .attr("id", "q2-map-title")
+                .text("Australian hospitalised road crash cases choropleth");
+            svg.append("desc")
+                .attr("id", "q2-map-description")
+                .text(`Map shaded by total hospitalisations for ${selectedRoadUser === "All" ? "all road users" : selectedRoadUser}, ${selectedYear === "All" ? "all years" : selectedYear}. Darker blue indicates more cases. Focus a state to hear its total.`);
+
+            const projection = d3.geoMercator()
+                .fitExtent([[24, 48], [width - 24, height - 108]], geoJson);
+            const path = d3.geoPath(projection);
+            const selectedYearLabel = selectedYear === "All" ? "All Years" : selectedYear;
+            const selectedRoadUserLabel = selectedRoadUser === "All" ? "All road users" : selectedRoadUser;
+
+            function positionTooltip(event) {
+                tooltip
+                    .style("left", `${event.pageX + 14}px`)
+                    .style("top", `${event.pageY - 64}px`);
+            }
+
+            function showTooltip(feature, state, event) {
+                const stateName = Q2_CHART_CONFIG.stateNames[state];
+                const total = stateTotals.get(state);
+                tooltip
+                    .style("opacity", 1)
+                    .html(`<strong>${stateName}</strong><br>
+                           <strong>Year:</strong> ${selectedYearLabel}<br>
+                           <strong>Road user:</strong> ${selectedRoadUserLabel}<br>
+                           <strong>Total hospitalisations:</strong> ${formatCount(total)}`);
+                if (event) {
+                    positionTooltip(event);
+                } else {
+                    const bounds = feature.getBoundingClientRect();
+                    tooltip
+                        .style("left", `${window.scrollX + bounds.left + bounds.width / 2 + 14}px`)
+                        .style("top", `${window.scrollY + bounds.top - 64}px`);
+                }
+            }
+
+            svg.append("g")
+                .attr("class", "q2-map-states")
+                .selectAll("path")
+                .data(features)
+                .join("path")
+                .attr("class", "q2-map-state")
+                .attr("d", d => path(d.feature))
+                .attr("fill", d => colorScale(stateTotals.get(d.state)))
+                .attr("tabindex", 0)
+                .attr("role", "img")
+                .attr("aria-label", d =>
+                    `${Q2_CHART_CONFIG.stateNames[d.state]}. Year: ${selectedYearLabel}. ` +
+                    `Road user: ${selectedRoadUserLabel}. Total hospitalisations: ` +
+                    `${formatCount(stateTotals.get(d.state))}.`
+                )
+                .on("mouseenter", function (event, d) {
+                    showTooltip(this, d.state, event);
+                })
+                .on("mousemove", event => positionTooltip(event))
+                .on("mouseleave", () => tooltip.style("opacity", 0))
+                .on("focus", function (event, d) {
+                    showTooltip(this, d.state);
+                })
+                .on("blur", () => tooltip.style("opacity", 0));
+
+            const legendWidth = 250;
+            const legendX = (width - legendWidth) / 2;
+            const legendY = height - 57;
+            const gradient = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "q2-map-gradient");
+            gradient.append("stop").attr("offset", "0%").attr("stop-color", colorScale(0));
+            gradient.append("stop").attr("offset", "100%").attr("stop-color", colorScale(maximum));
+
+            const legend = svg.append("g")
+                .attr("class", "q2-map-legend")
+                .attr("role", "img")
+                .attr("aria-label", `Color scale from 0 to ${formatCount(maximum)} hospitalisations`);
+            legend.append("text")
+                .attr("x", legendX)
+                .attr("y", legendY - 8)
+                .text("Hospitalisations");
+            legend.append("rect")
+                .attr("x", legendX)
+                .attr("y", legendY)
+                .attr("width", legendWidth)
+                .attr("height", 12)
+                .attr("rx", 4)
+                .attr("fill", "url(#q2-map-gradient)");
+            legend.append("text")
+                .attr("x", legendX)
+                .attr("y", legendY + 28)
+                .text("0");
+            legend.append("text")
+                .attr("x", legendX + legendWidth)
+                .attr("y", legendY + 28)
+                .attr("text-anchor", "end")
+                .text(formatCount(maximum));
+        }
+
+        yearSlider.max = String(Q2_CHART_CONFIG.years.length);
+        yearSlider.value = String(Q2_CHART_CONFIG.years.length);
+        addYearStops();
+        updateYearSlider();
+        yearSlider.addEventListener("input", () => {
+            updateYearSlider();
+            renderMap();
+        });
+        roadUserSelect.addEventListener("change", () => {
+            selectedRoadUser = roadUserSelect.value;
+            renderMap();
+        });
+        renderMap();
+    } catch (error) {
+        container.html("")
+            .append("p")
+            .attr("class", "chart-error")
+            .text(`Unable to load or render the Q2 map. ${error.message}`);
     }
-
-    clearSelectionButton.on("click", () => {
-      selectedCategory = null;
-      clearActiveCategory();
-      tooltip.style("opacity", 0);
-    });
-
-    function updateDonutCenter(datum) {
-      centerTitle
-        .attr("font-size", datum && datum.name.length > 18 ? 10 : 12)
-        .text(datum ? datum.name : "All road users");
-      centerValue.text(formatValue(datum ? datum.count : total));
-      centerCaption.text(datum
-        ? `${d3.format(".1%")(datum.count / total)} of total`
-        : "hospitalisations");
-    }
-  }
-
-  d3.csv("data/q2_clean.csv", row => ({
-    name: row.prediction,
-    count: Number(row["Sum(Hospitalisations)"])
-  })).then(data => {
-    if (data.length === 0 || data.some(d => !d.name || !Number.isFinite(d.count) || d.count < 0)) {
-      showError("The road user data could not be read. Check the columns in data/q2_clean.csv.");
-      return;
-    }
-
-    chartData = data;
-    const total = d3.sum(chartData, d => d.count);
-    const largest = chartData.reduce((highest, current) =>
-      current.count > highest.count ? current : highest
-    );
-    const topThreeCount = chartData
-      .slice()
-      .sort((a, b) => d3.descending(a.count, b.count))
-      .slice(0, 3)
-      .reduce((sum, d) => sum + d.count, 0);
-    totalLabel.text(formatValue(total));
-    d3.select("#q2-largest").text(largest.name);
-    d3.select("#q2-largest-detail").text(
-      `${formatValue(largest.count)} · ${d3.format(".1%")(largest.count / total)}`
-    );
-    d3.select("#q2-top-three").text(d3.format(".1%")(topThreeCount / total));
-
-    d3.selectAll(".metric-btn[data-metric]").on("click", function () {
-      currentMetric = this.dataset.metric;
-      d3.selectAll(".metric-btn[data-metric]")
-        .classed("active", false)
-        .attr("aria-pressed", "false");
-      d3.select(this)
-        .classed("active", true)
-        .attr("aria-pressed", "true");
-      render();
-    });
-    window.addEventListener("resize", render);
-    render();
-  }).catch(error => {
-    console.error("Unable to load Question 2 data:", error);
-    showError("Unable to load road user data. Open this page through a local web server and check that data/q2_clean.csv is available.");
-  });
-})();
+});

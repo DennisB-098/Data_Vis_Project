@@ -9,15 +9,19 @@
             const enterClass = savedDirection === 'previous'
                 ? 'page-enter-from-left'
                 : 'page-enter-from-right';
-            const clearEnterState = () => root.classList.remove(enterClass);
-
-            root.classList.add(enterClass);
-            document.body.addEventListener('animationend', event => {
+            const clearEnterState = () => {
+                root.classList.remove(enterClass);
+                document.body.removeEventListener('animationend', handleAnimationEnd);
+            };
+            const handleAnimationEnd = event => {
                 if (event.target === document.body) {
                     clearEnterState();
                 }
-            }, { once: true });
-            window.setTimeout(clearEnterState, 500);
+            };
+
+            root.classList.add(enterClass);
+            document.body.addEventListener('animationend', handleAnimationEnd);
+            window.setTimeout(clearEnterState, 550);
         }
     }
 
@@ -56,8 +60,13 @@
         }
         isNavigating = true;
 
-        const isPrevious = link.classList.contains('previous') ||
-            /(?:^|\/)index\.html$/i.test(destination.pathname);
+        const currentQuestion = window.location.pathname.match(/(?:^|\/)Q(\d+)\.html$/i);
+        const destinationQuestion = destination.pathname.match(/(?:^|\/)Q(\d+)\.html$/i);
+        const isPrevious = currentQuestion && destinationQuestion
+            ? Number(destinationQuestion[1]) < Number(currentQuestion[1])
+            : link.classList.contains('previous') ||
+                link.classList.contains('floating-prev-btn') ||
+                /(?:^|\/)index\.html$/i.test(destination.pathname);
 
         if (reducedMotion) {
             window.location.assign(destination.href);
@@ -66,6 +75,6 @@
 
         sessionStorage.setItem('page-transition-direction', isPrevious ? 'previous' : 'next');
         root.classList.add(isPrevious ? 'page-exit-to-right' : 'page-exit-to-left');
-        window.setTimeout(() => window.location.assign(destination.href), 380);
+        window.setTimeout(() => window.location.assign(destination.href), 500);
     });
 })();

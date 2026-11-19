@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospitalisations by road user type</title>
+    <title>Hospitalised Road Crash Cases by State</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="js/page-transition.js" defer></script>
 </head>
+
 <body>
     <div class="presentation-container">
         <div class="slide active" id="slide-chart">
@@ -17,47 +19,51 @@
                 <a href="appendix.html">Appendix</a>
             </div>
 
-            <div class="chart-page-content">
+            <main class="chart-page-content q5-chart-page q2-chart-page">
                 <div class="chart-header">
-                    <div>
-                        <h2>Which road user groups account for the most hospitalisations?</h2>
-                        <p class="subtitle">Compare hospitalisations by road user type. Hover or focus to preview a group; click or tap to pin its details.</p>
+                    <div class="q2-chart-intro">
+                        <h2>How do hospitalised road crash cases vary across Australia?</h2>
+                        <p class="subtitle">Filter by road user and year; darker blue indicates more hospitalisations.</p>
                     </div>
-                    <div class="metric-controls" role="group" aria-label="Chart measure">
-                        <button class="btn metric-btn active" type="button" data-metric="count" aria-pressed="true">Total number</button>
-                        <button class="btn metric-btn" type="button" data-metric="percentage" aria-pressed="false">Percentage</button>
-                        <button class="btn metric-btn clear-selection-btn" id="q2-clear-selection" type="button" hidden>Clear highlight</button>
+                    <div class="chart-controls">
+                        <div class="q2-road-user-control">
+                            <label for="road-user-select">Road user</label>
+                            <select id="road-user-select">
+                                <option value="All">All road users</option>
+                                <option value="Car driver, passenger or unknown position">Car driver, passenger or unknown position</option>
+                                <option value="Motorcyclist">Motorcyclist</option>
+                                <option value="Pedal cyclist">Pedal cyclist</option>
+                                <option value="Pedestrian">Pedestrian</option>
+                                <option value="Bus occupant">Bus occupant</option>
+                                <option value="Heavy transport driver, passenger or unknown position">Heavy transport driver, passenger or unknown position</option>
+                                <option value="Other or unknown">Other or unknown</option>
+                                <option value="Pick-up truck or van occupant">Pick-up truck or van occupant</option>
+                            </select>
+                        </div>
+                        <div class="year-control">
+                            <div class="year-control-heading">
+                                <label for="year-slider">Calendar year</label>
+                                <output id="year-slider-value" for="year-slider" aria-live="polite">All</output>
+                            </div>
+                            <div class="year-slider-wrap">
+                                <input id="year-slider" type="range" min="0" max="11" step="1" value="11"
+                                    aria-label="Select calendar year or all years">
+                                <div id="year-slider-stops" class="year-slider-stops" aria-hidden="true"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="chart-insights" aria-label="Road user hospitalisation summary">
-                    <article class="insight-card">
-                        <span class="insight-label">Included hospitalisations</span>
-                        <strong id="q2-total" aria-live="polite">—</strong>
-                        <span class="insight-note">across all road user groups</span>
-                    </article>
-                    <article class="insight-card">
-                        <span class="insight-label">Largest group</span>
-                        <strong id="q2-largest">—</strong>
-                        <span class="insight-note" id="q2-largest-detail"></span>
-                    </article>
-                    <article class="insight-card">
-                        <span class="insight-label">Top three groups</span>
-                        <strong id="q2-top-three">—</strong>
-                        <span class="insight-note">share of included hospitalisations</span>
-                    </article>
-                </div>
-                <p class="selection-status" id="q2-selection-status" aria-live="polite">Hover or focus a group to preview it, then click or tap to pin its details.</p>
-                <div id="q2-chart" class="chart-card">
-                    <p class="chart-error">Loading road user data…</p>
-                </div>
+
+                <div id="australia-map-container" class="chart-card"></div>
                 <p class="chart-source">Source: Australian Government, Department of Infrastructure, Transport, Regional Development, Communications and the Arts (2023).</p>
-            </div>
+            </main>
         </div>
     </div>
 
-    <a href="Q1.html" class="btn floating-next-btn previous">← Previous</a>
-    <a href="Q3.html" class="btn floating-next-btn">Next →</a>
-    <div id="chart-tooltip" class="tooltip"></div>
-    <script src="js/Q2chart.js"></script>
+    <a href="Q1.html" class="btn floating-prev-btn previous" aria-label="Previous page">← Previous</a>
+    <a href="Q3.html" class="btn floating-next-btn" aria-label="Next page">Next →</a>
+    <div id="chart-tooltip" class="tooltip" role="status" aria-live="polite"></div>
+    <script src="js/Q2chart.js?v=3"></script>
 </body>
+
 </html>
