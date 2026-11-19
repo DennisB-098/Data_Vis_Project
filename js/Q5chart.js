@@ -256,6 +256,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                     ? "Hospitalisations (absolute values)"
                     : "Average hospital stay (days)");
 
+            const showTooltip = d => {
+                tooltip
+                    .style("opacity", 1)
+                    .html(`<strong>Age group:</strong> ${d.ageGroup}<br>
+                           <strong>Sex:</strong> ${d.sex === "male" ? "Male" : "Female"}<br>
+                           <strong>${metricLabels[selectedMetric]}:</strong> ${formatValue(d.value)}`);
+            };
+
             const barSelection = plot.selectAll(".butterfly-bar")
                 .data(bars, d => `${d.ageGroup}-${d.sex}`)
                 .join(
@@ -270,18 +278,25 @@ document.addEventListener("DOMContentLoaded", async () => {
                     update => update
                 )
                 .attr("fill", d => d.sex === "male" ? "#3977a8" : "#d65b78")
+                .attr("tabindex", 0)
+                .attr("role", "img")
+                .attr("aria-label", d => `${d.ageGroup}, ${d.sex === "male" ? "Male" : "Female"}: ${metricLabels[selectedMetric]} ${formatValue(d.value)}`)
                 .on("mouseenter", (event, d) => {
-                    tooltip
-                        .style("opacity", 1)
-                        .html(`<strong>Age group:</strong> ${d.ageGroup}<br>
-                               <strong>Sex:</strong> ${d.sex === "male" ? "Male" : "Female"}<br>
-                               <strong>${metricLabels[selectedMetric]}:</strong> ${formatValue(d.value)}`);
+                    showTooltip(d);
                 })
                 .on("mousemove", event => {
                     tooltip
                         .style("left", `${event.pageX + 14}px`)
                         .style("top", `${event.pageY - 64}px`);
                 })
+                .on("focus", function (event, d) {
+                    showTooltip(d);
+                    const bounds = this.getBoundingClientRect();
+                    tooltip
+                        .style("left", `${window.scrollX + bounds.left + bounds.width / 2 + 14}px`)
+                        .style("top", `${window.scrollY + bounds.top - 64}px`);
+                })
+                .on("blur", () => tooltip.style("opacity", 0))
                 .on("mouseleave", () => tooltip.style("opacity", 0));
 
             // Negative male values position bars to the left of the central zero line.

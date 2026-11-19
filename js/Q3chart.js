@@ -25,9 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
             d["Sum(Count of cases)"] = +d["Sum(Count of cases)"];
             d["Average_Bed_Days"] = +d["Average_Bed_Days"];
         });
-     rawData = data;
+        rawData = data;
         renderChart(currentMetric);
-        renderTable(currentMetric); 
+        renderTable(currentMetric);
 
         document.querySelectorAll(".metric-btn").forEach(btn => {
             btn.addEventListener("click", () => {
@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 btn.classList.add("active");
                 currentMetric = btn.getAttribute("data-metric");
                 renderChart(currentMetric);
-                renderTable(currentMetric); 
+                renderTable(currentMetric);
             });
         });
 
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function renderChart(metric) {
-        container.innerHTML = ""; 
+        container.innerHTML = "";
 
         const rect = container.getBoundingClientRect();
         const margin = { top: 20, right: 75, bottom: 75, left: 265 };
@@ -95,11 +95,24 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("class", "axis")
             .call(d3.axisLeft(y));
 
+        const showTooltip = d => {
+            tooltip.style("opacity", 1)
+                .html(`
+                    <strong>${d.Counterparty}</strong><br>
+                    Avg Bed Days: <b>${d.Average_Bed_Days}</b> days<br>
+                    Total Cases: <b>${d3.format(",")(d["Sum(Count of cases)"])}</b><br>
+                    Total Bed Days: <b>${d3.format(",")(d["Sum(Bed days)"])}</b>
+                `);
+        };
+
         svg.selectAll(".bar")
             .data(sortedData)
             .enter()
             .append("rect")
             .attr("class", "bar")
+            .attr("tabindex", 0)
+            .attr("role", "img")
+            .attr("aria-label", d => `${d.Counterparty}. Average bed days: ${d.Average_Bed_Days}. Total cases: ${d3.format(",")(d["Sum(Count of cases)"])}. Total bed days: ${d3.format(",")(d["Sum(Bed days)"])}`)
             .attr("y", d => y(d.Counterparty))
             .attr("height", y.bandwidth())
             .attr("x", 0)
@@ -108,19 +121,25 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("width", 0)
             .on("mouseover", function (event, d) {
                 d3.select(this).attr("fill", "#C0CBCD");
-                tooltip.style("opacity", 1)
-                    .html(`
-                        <strong>${d.Counterparty}</strong><br>
-                        Avg Bed Days: <b>${d.Average_Bed_Days}</b> days<br>
-                        Total Cases: <b>${d3.format(",")(d["Sum(Count of cases)"])}</b><br>
-                        Total Bed Days: <b>${d3.format(",")(d["Sum(Bed days)"])}</b>
-                    `);
+                showTooltip(d);
             })
             .on("mousemove", (event) => {
                 tooltip.style("top", (event.pageY - 70) + "px")
                     .style("left", (event.pageX + 15) + "px");
             })
+            .on("focus", function (event, d) {
+                d3.select(this).attr("fill", "#C0CBCD");
+                showTooltip(d);
+                const bounds = this.getBoundingClientRect();
+                tooltip.style("top", `${window.scrollY + bounds.top - 70}px`)
+                    .style("left", `${window.scrollX + bounds.left + 15}px`);
+            })
             .on("mouseout", function (event, d, i) {
+                const index = sortedData.indexOf(d);
+                d3.select(this).attr("fill", index === 0 ? "#284b68" : "#5c7d91");
+                tooltip.style("opacity", 0);
+            })
+            .on("blur", function (event, d) {
                 const index = sortedData.indexOf(d);
                 d3.select(this).attr("fill", index === 0 ? "#284b68" : "#5c7d91");
                 tooltip.style("opacity", 0);

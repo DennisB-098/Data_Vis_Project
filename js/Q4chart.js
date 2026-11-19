@@ -74,9 +74,16 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("viewBox", `0 0 ${width} ${height}`)
             .attr("role", "img")
             .attr("aria-label", title)
+            .attr("aria-describedby", "heatmap-description")
             .style("opacity", 0);
 
         svg.append("title").text(title);
+        svg.append("desc")
+            .attr("id", "heatmap-description")
+            .text(isDrilldown
+                ? `Heatmap showing average hospital stay in days for each age group across the two six-month periods in ${selectedYear}. Darker red indicates a longer stay.`
+                : "Heatmap showing average hospital stay in days for each age group by year. Darker red indicates a longer stay. Select a cell to view the six-month breakdown for that year."
+            );
 
         svg.append("text")
             .attr("x", width / 2)
