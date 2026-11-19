@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annual road injury hospitalisations in Australia</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="presentation-container">
+        <div class="slide active" id="slide-chart">
+            <div class="navbar">
+                <a href="index.html">Home Page</a>
+                <a href="about.html">About</a>
+                <a href="appendix.html">Appendix</a>
+            </div>
+
+            <div class="chart-page-content">
+                <div class="chart-header">
+                    <div>
+                        <h2>How have road injury hospitalisations changed over time?</h2>
+                        <p class="subtitle">Annual hospitalisations in Australia, 2011–2021. Hover over a point to see its exact value.</p>
+                    </div>
+                </div>
+                <div id="q1-chart" class="chart-card">
+                    <p class="chart-error">Loading annual data…</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="Q2.html" class="btn floating-next-btn">Next →</a>
+    <div id="chart-tooltip" class="tooltip"></div>
+    <script src="js/Q1chart.js"></script>
+</body>
+</html>
