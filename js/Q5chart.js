@@ -1,16 +1,82 @@
+const Q5_CHART_CONFIG = {
+    dataPath: "data/question5.2data.csv",
+    ageOrder: ["0-7", "8-16", "17-25", "26-39", "40-64", "65-74", "75+"],
+    metricLabels: {
+        hospitalisations: "Hospitalisations",
+        averageHospitalStay: "Average hospital stay"
+    },
+    width: 1000,
+    height: 540,
+    margin: { top: 24, right: 38, bottom: 76, left: 112 }
+};
+
+function parseQ5Row(d, index) {
+    const year = +d["Calendar year"];
+    const hospitalisations = +d["Sum(Hospitalisations)"];
+    const averageHospitalStay = +d["Average_Hospital_Stay"];
+    const sex = d.Sex.trim().toLowerCase();
+
+    if (!Number.isFinite(year) || !Number.isFinite(averageHospitalStay) ||
+        !Number.isFinite(hospitalisations)) {
+        throw new Error(`Invalid numeric value in CSV row ${index + 2}.`);
+    }
+    if (sex !== "male" && sex !== "female") {
+        throw new Error(`Unexpected sex value "${d.Sex}" in CSV row ${index + 2}.`);
+    }
+
+    return {
+        year,
+        ageGroup: d["Age group"],
+        sex,
+        hospitalisations,
+        averageHospitalStay
+    };
+}
+
+function loadQ5Data() {
+    return d3.csv(Q5_CHART_CONFIG.dataPath, parseQ5Row);
+}
+
+function aggregateQ5Data(data, selectedYear, selectedMetric, ageOrder) {
+    const filtered = selectedYear === "All"
+        ? data
+        : data.filter(d => d.year === Number(selectedYear));
+
+    const totals = d3.rollup(
+        filtered,
+        rows => {
+            const hospitalisations = d3.sum(rows, d => d.hospitalisations);
+            return {
+                hospitalisations,
+                // Weight the all-years average by its hospitalization count.
+                averageHospitalStay: hospitalisations > 0
+                    ? d3.sum(rows, d => d.averageHospitalStay * d.hospitalisations) /
+                    hospitalisations
+                    : 0
+            };
+        },
+        d => d.ageGroup,
+        d => d.sex
+    );
+
+    return ageOrder.map(ageGroup => {
+        const bySex = totals.get(ageGroup);
+        const male = bySex && bySex.get("male");
+        const female = bySex && bySex.get("female");
+        return {
+            ageGroup,
+            maleValue: male ? male[selectedMetric] : 0,
+            femaleValue: female ? female[selectedMetric] : 0
+        };
+    });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     const container = document.getElementById("butterfly-chart-container");
     const yearSelect = document.getElementById("year-select");
     const metricButtons = d3.selectAll(".metric-btn");
     const tooltip = d3.select("#chart-tooltip");
-    const ageOrder = ["0-7", "8-16", "17-25", "26-39", "40-64", "65-74", "75+"];
-    const metricLabels = {
-        hospitalisations: "Hospitalisations",
-        averageHospitalStay: "Average hospital stay"
-    };
-    const width = 1000;
-    const height = 540;
-    const margin = { top: 24, right: 38, bottom: 76, left: 112 };
+    const { ageOrder, metricLabels, width, height, margin } = Q5_CHART_CONFIG;
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
     const formatCount = d3.format(",");
@@ -22,29 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         : formatStay(value);
 
     try {
-        // Parse once so year and metric changes can reuse the loaded rows.
-        const sourceData = await d3.csv("data/question5.2data.csv", (d, index) => {
-            const year = Number(d["Calendar year"]);
-            const hospitalisations = Number(d["Sum(Hospitalisations)"]);
-            const averageHospitalStay = Number(d["Average_Hospital_Stay"]);
-            const sex = d.Sex.trim().toLowerCase();
-
-            if (!Number.isFinite(year) || !Number.isFinite(averageHospitalStay) ||
-                !Number.isFinite(hospitalisations)) {
-                throw new Error(`Invalid numeric value in CSV row ${index + 2}.`);
-            }
-            if (sex !== "male" && sex !== "female") {
-                throw new Error(`Unexpected sex value "${d.Sex}" in CSV row ${index + 2}.`);
-            }
-
-            return {
-                year,
-                ageGroup: d["Age group"],
-                sex,
-                hospitalisations,
-                averageHospitalStay
-            };
-        });
+        const sourceData = await loadQ5Data();
 
         if (sourceData.length === 0) {
             throw new Error("The CSV contains no data rows.");
@@ -91,38 +135,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         ]);
 
         function processData() {
-            const selectedYear = yearSelect.value;
-            const filtered = selectedYear === "All"
-                ? sourceData
-                : sourceData.filter(d => d.year === Number(selectedYear));
-
-            // Pool annual average stays by hospitalization count for the All-years view.
-            const totals = d3.rollup(
-                filtered,
-                rows => {
-                    const hospitalisations = d3.sum(rows, d => d.hospitalisations);
-                    return {
-                        hospitalisations,
-                        averageHospitalStay: hospitalisations > 0
-                            ? d3.sum(rows, d => d.averageHospitalStay * d.hospitalisations) /
-                                hospitalisations
-                            : 0
-                    };
-                },
-                d => d.ageGroup,
-                d => d.sex
+            return aggregateQ5Data(
+                sourceData,
+                yearSelect.value,
+                selectedMetric,
+                ageOrder
             );
-
-            return ageOrder.map(ageGroup => {
-                const bySex = totals.get(ageGroup);
-                const male = bySex && bySex.get("male");
-                const female = bySex && bySex.get("female");
-                return {
-                    ageGroup,
-                    maleValue: male ? male[selectedMetric] : 0,
-                    femaleValue: female ? female[selectedMetric] : 0
-                };
-            });
         }
 
         function render(animate) {
