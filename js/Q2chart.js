@@ -57,6 +57,10 @@ const Q2_COLUMN_NAMES = {
 document.addEventListener("DOMContentLoaded", async () => {
     const container = d3.select("#australia-map-container");
     const tooltip = d3.select("#chart-tooltip");
+    const zoomInButton = document.getElementById("q2-map-zoom-in");
+    const zoomOutButton = document.getElementById("q2-map-zoom-out");
+    const zoomResetButton = document.getElementById("q2-map-zoom-reset");
+    const zoomLevel = document.getElementById("q2-map-zoom-level");
     const roadUserSelect = document.getElementById("road-user-select");
     const yearSlider = document.getElementById("year-slider");
     const yearStops = document.getElementById("year-slider-stops");
@@ -65,12 +69,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     let selectedRoadUser = "All";
     let mapSvg;
     let mapPaths;
+    let mapZoom;
     let mapLegend;
     let mapGradientStops;
     let mapRendered = false;
     let stateTotals;
     let selectedYearLabel;
     let selectedRoadUserLabel;
+
+    const minMapZoom = 1;
+    const maxMapZoom = 8;
+
+    function updateZoomControls(scale) {
+        zoomLevel.textContent = `${Math.round(scale * 100)}%`;
+        zoomOutButton.disabled = scale <= minMapZoom;
+        zoomInButton.disabled = scale >= maxMapZoom;
+        zoomResetButton.disabled = scale <= minMapZoom;
+    }
+
+    zoomInButton.addEventListener("click", () => {
+        if (mapSvg && mapZoom) {
+            mapSvg.transition().duration(200).call(mapZoom.scaleBy, 1.5);
+        }
+    });
+    zoomOutButton.addEventListener("click", () => {
+        if (mapSvg && mapZoom) {
+            mapSvg.transition().duration(200).call(mapZoom.scaleBy, 1 / 1.5);
+        }
+    });
+    zoomResetButton.addEventListener("click", () => {
+        if (mapSvg && mapZoom) {
+            mapSvg.transition().duration(200).call(mapZoom.transform, d3.zoomIdentity);
+        }
+    });
 
     const parseRow = (row, index) => {
         const half = row[Q2_COLUMN_NAMES.half];
@@ -264,6 +295,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                         showTooltip(this, d.state);
                     })
                     .on("blur", () => tooltip.style("opacity", 0));
+
+                mapZoom = d3.zoom()
+                    .scaleExtent([minMapZoom, maxMapZoom])
+                    .extent([[0, 0], [width, height]])
+                    .translateExtent([[0, 0], [width, height]])
+                    .on("zoom", event => {
+                        mapPaths.attr("transform", event.transform);
+                        updateZoomControls(event.transform.k);
+                    });
+                mapSvg.call(mapZoom).on("dblclick.zoom", null);
 
                 const legendWidth = 250;
                 const legendX = (width - legendWidth) / 2;

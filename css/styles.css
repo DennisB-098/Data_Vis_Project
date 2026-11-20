@@ -1472,6 +1472,67 @@ html.page-exit-to-right body {
 #australia-map-container .q2-map-svg {
     width: 100%;
     height: 100%;
+    touch-action: none;
+}
+
+.q2-map-controls {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid #d5e0e6;
+    border-radius: 9px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(40, 75, 104, 0.12);
+}
+
+.q2-map-controls button {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px solid #9aadb7;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #284b68;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.q2-map-controls button:disabled {
+    color: #82939d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.q2-map-controls button:focus-visible {
+    outline: 3px solid #1689be;
+    outline-offset: 2px;
+}
+
+#q2-map-zoom-level {
+    min-width: 46px;
+    color: #284b68;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.q2-map-zoom-hint {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    margin: 0;
+    padding: 5px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #526a78;
+    font-size: 0.8rem;
+    pointer-events: none;
 }
 
 .q2-map-state {

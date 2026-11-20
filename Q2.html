@@ -54,7 +54,18 @@
                     </div>
                 </div>
 
-                <div id="australia-map-container" class="chart-card"></div>
+                <div id="australia-map-container" class="chart-card">
+                    <div class="q2-map-controls" role="group" aria-label="Map zoom controls">
+                        <button id="q2-map-zoom-out" type="button" aria-label="Zoom out map" title="Zoom out map"
+                            disabled>-</button>
+                        <output id="q2-map-zoom-level">100%</output>
+                        <button id="q2-map-zoom-in" type="button" aria-label="Zoom in map" title="Zoom in map"
+                            disabled>+</button>
+                        <button id="q2-map-zoom-reset" type="button" aria-label="Reset map zoom"
+                            title="Reset map zoom" disabled>Reset</button>
+                    </div>
+                    <p class="q2-map-zoom-hint">Scroll or pinch to zoom; drag to pan</p>
+                </div>
                 <p class="chart-source">Source: Australian Government, Department of Infrastructure, Transport, Regional Development, Communications and the Arts (2023).</p>
             </main>
         </div>
