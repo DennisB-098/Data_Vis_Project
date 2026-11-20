@@ -36,7 +36,7 @@
     positionTooltip(event);
   }
 
-  d3.csv("data/q1_clean.csv", row => ({
+  d3.csv("Data/q1_clean.csv", row => ({
     year: Number(row["Calendar year"]),
     hospitalisations: Number(row["Sum(Hospitalisations)"])
   })).then(data => {
