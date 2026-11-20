@@ -305,6 +305,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         updateZoomControls(event.transform.k);
                     });
                 mapSvg.call(mapZoom).on("dblclick.zoom", null);
+                updateZoomControls(minMapZoom);
 
                 const legendWidth = 250;
                 const legendX = (width - legendWidth) / 2;
