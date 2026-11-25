@@ -1614,6 +1614,17 @@ html.page-exit-to-right body {
     pointer-events: none;
 }
 
+.butterfly-bar-label {
+    fill: #17364b;
+    font-size: 10px;
+    font-weight: 700;
+    paint-order: stroke;
+    stroke: rgba(255, 255, 255, 0.85);
+    stroke-width: 2px;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
 .q2-map-legend text {
     fill: #3b5668;
     font-size: 13px;

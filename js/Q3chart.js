@@ -25,8 +25,16 @@ document.addEventListener("DOMContentLoaded", () => {
             d["Sum(Count of cases)"] = +d["Sum(Count of cases)"];
             d["Average_Bed_Days"] = +d["Average_Bed_Days"];
         });
+        const invalid = data.find(d =>
+            !Number.isFinite(d["Sum(Bed days)"]) ||
+            !Number.isFinite(d["Sum(Count of cases)"]) ||
+            !Number.isFinite(d["Average_Bed_Days"]));
+        if (invalid || data.length === 0) {
+            container.innerHTML = '<p class="chart-error">Q3.csv is empty or contains non-numeric values.</p>';
+            return;
+        }
         rawData = data;
-        renderChart(currentMetric);
+        renderChart(currentMetric, { animate: true });
         renderTable(currentMetric);
 
         document.querySelectorAll(".metric-btn").forEach(btn => {
@@ -37,19 +45,25 @@ document.addEventListener("DOMContentLoaded", () => {
                     b.setAttribute("aria-pressed", String(b === btn));
                 });
                 currentMetric = btn.getAttribute("data-metric");
-                renderChart(currentMetric);
+                renderChart(currentMetric, { animate: true });
                 renderTable(currentMetric);
             });
         });
 
+        let resizeTimer;
         window.addEventListener("resize", () => {
-            renderChart(currentMetric);
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                renderChart(currentMetric, { animate: false });
+                renderTable(currentMetric);
+            }, 180);
         });
     }).catch(err => {
         container.innerHTML = `<p>Unable to load Q3.csv. Please ensure you are running the page through a local server (e.g., VS Code Live Server). Error details: ${err}</p>`;
     });
 
-    function renderChart(metric) {
+    function renderChart(metric, options = {}) {
+        const animate = options.animate !== false;
         container.innerHTML = "";
 
         const rect = container.getBoundingClientRect();
@@ -61,8 +75,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const chartSvg = d3.select("#bar-chart-container")
             .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
+            .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+            .style("width", "100%")
+            .style("height", "auto")
             .attr("role", "group")
             .attr("aria-labelledby", "q3-chart-title")
             .attr("aria-describedby", "q3-chart-description");
@@ -114,19 +129,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 .html(`
                     <strong>${d.Counterparty}</strong><br>
                     Avg Bed Days: <b>${d.Average_Bed_Days}</b> days<br>
-                    Total Cases: <b>${d3.format(",")(d["Sum(Count of cases)"])}</b><br>
-                    Total Bed Days: <b>${d3.format(",")(d["Sum(Bed days)"])}</b>
+                    Total Cases: <b>${window.SHARED.formatCount(d["Sum(Count of cases)"])}</b><br>
+                    Total Bed Days: <b>${window.SHARED.formatCount(d["Sum(Bed days)"])}</b>
                 `);
         };
 
-        svg.selectAll(".bar")
+        const barSelection = svg.selectAll(".bar")
             .data(sortedData)
             .enter()
             .append("rect")
             .attr("class", "bar")
             .attr("tabindex", 0)
             .attr("role", "img")
-            .attr("aria-label", d => `${d.Counterparty}. Average bed days: ${d.Average_Bed_Days}. Total cases: ${d3.format(",")(d["Sum(Count of cases)"])}. Total bed days: ${d3.format(",")(d["Sum(Bed days)"])}`)
+            .attr("aria-label", d => `${d.Counterparty}. Average bed days: ${d.Average_Bed_Days}. Total cases: ${window.SHARED.formatCount(d["Sum(Count of cases)"])}. Total bed days: ${window.SHARED.formatCount(d["Sum(Bed days)"])}`)
             .attr("y", d => y(d.Counterparty))
             .attr("height", y.bandwidth())
             .attr("x", 0)
@@ -160,10 +175,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 const index = sortedData.indexOf(d);
                 d3.select(this).attr("fill", index === 0 ? "#284b68" : "#5c7d91");
                 tooltip.style("opacity", 0);
-            })
-            .transition()
-            .duration(800)
-            .attr("width", d => x(d[metric]));
+            });
+
+        if (animate) {
+            barSelection.transition()
+                .duration(800)
+                .attr("width", d => x(d[metric]));
+        } else {
+            barSelection.attr("width", d => x(d[metric]));
+        }
     }
 
     function renderTable(metric) {

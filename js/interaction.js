@@ -23,7 +23,10 @@ window.positionChartTooltip = (event, tooltip) => {
         left = left - rect.width - 28;
     }
     if (pageTop < 8) {
-        top = top + rect.height + 128;
+        const pointerY = Number.isFinite(event.pageY)
+            ? event.pageY
+            : (Number.isFinite(event.clientY) ? event.clientY + window.scrollY : window.scrollY + 8);
+        top = pointerY + 14;
     }
 
     tooltip.style("left", `${left}px`).style("top", `${top}px`);

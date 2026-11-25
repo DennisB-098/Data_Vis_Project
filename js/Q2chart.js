@@ -367,6 +367,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                     .attr("x", legendX)
                     .attr("y", legendY + 28);
                 mapLegend.append("text")
+                    .attr("class", "q2-map-legend-mid")
+                    .attr("x", legendX + legendWidth / 2)
+                    .attr("y", legendY + 28)
+                    .attr("text-anchor", "middle");
+                mapLegend.append("text")
                     .attr("class", "q2-map-legend-max")
                     .attr("x", legendX + legendWidth)
                     .attr("y", legendY + 28)
@@ -385,6 +390,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 .attr("aria-label", `Color scale from 0 to ${formatCount(maximum)} hospitalisations`)
                 .select(".q2-map-legend-min")
                 .text("0");
+            mapLegend.select(".q2-map-legend-mid").text(formatCount(maximum / 2));
             mapLegend.select(".q2-map-legend-max").text(formatCount(maximum));
 
             const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches

@@ -44,8 +44,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         renderHeatmap(annualData);
     }).catch(error => {
-        container.innerHTML =
-            `<p>Unable to load question4.1data.csv. Please run this page through a local server. Error details: ${error}</p>`;
+        container.querySelectorAll("svg").forEach(svg => svg.remove());
+        const existingError = container.querySelector(".chart-error");
+        if (existingError) existingError.remove();
+        const message = document.createElement("p");
+        message.className = "chart-error";
+        message.textContent =
+            `Unable to load question4.1data.csv. Please run this page through a local server. Error details: ${error}`;
+        container.appendChild(message);
+        backButton.hidden = true;
     });
 
     backButton.addEventListener("click", () => {

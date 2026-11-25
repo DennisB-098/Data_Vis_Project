@@ -8,23 +8,6 @@
     container.html("").append("p").attr("class", "chart-error").text(message);
   }
 
-  function positionTooltip(event) {
-    const node = tooltip.node();
-    const bounds = node.getBoundingClientRect();
-    const pointerX = event.pageX != null ? event.pageX : event.clientX + window.scrollX;
-    const pointerY = event.pageY != null ? event.pageY : event.clientY + window.scrollY;
-    let left = pointerX + 14;
-    let top = pointerY - bounds.height - 12;
-
-    if (left + bounds.width > window.scrollX + window.innerWidth - 8) {
-      left = pointerX - bounds.width - 14;
-    }
-    if (top < window.scrollY + 8) {
-      top = pointerY + 14;
-    }
-    tooltip.style("left", `${left}px`).style("top", `${top}px`);
-  }
-
   function showTooltip(event, datum) {
     const previousYear = dataByYear.get(datum.year - 1);
     const yearChange = previousYear
@@ -33,7 +16,7 @@
     tooltip
       .html(`<strong>${datum.year}</strong><br>${formatValue(datum.hospitalisations)} hospitalisations<br><span>Year-on-year: ${yearChange}</span>`)
       .style("opacity", 1);
-    positionTooltip(event);
+    window.positionChartTooltip(event, tooltip);
   }
 
   window.loadChartCsv("Data/q1_clean.csv", row => ({
@@ -41,7 +24,7 @@
     hospitalisations: Number(row["Sum(Hospitalisations)"])
   })).then(data => {
     if (data.length === 0 || data.some(d => !Number.isFinite(d.year) || !Number.isFinite(d.hospitalisations))) {
-      showError("The annual data could not be read. Check the columns in data/q1_clean.csv.");
+      showError("The annual data could not be read. Check the columns in Data/q1_clean.csv.");
       return;
     }
 
@@ -51,8 +34,8 @@
     const peak = data.reduce((highest, current) =>
       current.hospitalisations > highest.hospitalisations ? current : highest
     );
-    const firstYear = data[0];
-    const lastYear = data[data.length - 1];
+    const firstYear = d3.least(data, d => d.year);
+    const lastYear = d3.greatest(data, d => d.year);
     const periodChange = (lastYear.hospitalisations - firstYear.hospitalisations) / firstYear.hospitalisations;
     d3.select("#q1-total").text(formatValue(total));
     d3.select("#q1-peak-year").text(peak.year);
@@ -76,7 +59,7 @@
         .attr("viewBox", `0 0 ${width} ${height}`)
         .style("width", "100%")
         .style("height", "auto")
-        .attr("role", "img")
+        .attr("role", "group")
         .attr("aria-label", "Line chart of annual road injury hospitalisations from 2011 to 2021");
       const plotWidth = width - margin.left - margin.right;
       const plotHeight = height - margin.top - margin.bottom;
@@ -103,7 +86,7 @@
         .attr("class", "average-label")
         .attr("x", 8)
         .attr("y", y(average) - 8)
-        .text(`11-year average: ${formatValue(Math.round(average))}`);
+        .text(`${data.length}-year average: ${formatValue(Math.round(average))}`);
 
       plot.append("g")
         .attr("class", "axis")
@@ -199,6 +182,6 @@
     window.addEventListener("resize", renderChart);
   }).catch(error => {
     console.error("Unable to load Question 1 data:", error);
-    showError("Unable to load annual data. Open this page through a local web server and check that data/q1_clean.csv is available.");
+    showError("Unable to load annual data. Open this page through a local web server and check that Data/q1_clean.csv is available.");
   });
 })();

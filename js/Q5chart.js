@@ -328,6 +328,20 @@ document.addEventListener("DOMContentLoaded", async () => {
                     .attr("x1", xScale(0))
                     .attr("x2", xScale(0));
             }
+
+            plot.selectAll(".butterfly-bar-label")
+                .data(bars, d => `${d.ageGroup}-${d.sex}`)
+                .join("text")
+                .attr("class", "butterfly-bar-label")
+                .attr("aria-hidden", "true")
+                .style("pointer-events", "none")
+                .attr("x", d => d.sex === "male"
+                    ? xScale(-d.value) - 5
+                    : xScale(d.value) + 5)
+                .attr("y", d => yScale(d.ageGroup) + yScale.bandwidth() / 2)
+                .attr("text-anchor", d => d.sex === "male" ? "end" : "start")
+                .attr("dominant-baseline", "middle")
+                .text(d => yScale.bandwidth() >= 14 ? formatValue(d.value) : "");
         }
 
         yearSlider.addEventListener("input", () => {
