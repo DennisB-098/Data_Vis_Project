@@ -1,5 +1,5 @@
 const Q5_CHART_CONFIG = {
-    dataPath: "data/question5.2data.csv",
+    dataPath: "Data/question5.2data.csv",
     ageOrder: ["0-7", "8-16", "17-25", "26-39", "40-64", "65-74", "75+"],
     metricLabels: {
         hospitalisations: "Hospitalisations",
@@ -34,7 +34,7 @@ function parseQ5Row(d, index) {
 }
 
 function loadQ5Data() {
-    return d3.csv(Q5_CHART_CONFIG.dataPath, parseQ5Row);
+    return window.loadChartCsv(Q5_CHART_CONFIG.dataPath, parseQ5Row);
 }
 
 function aggregateQ5Data(data, selectedYear, selectedMetric, ageOrder) {
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const { ageOrder, metricLabels, width, height, margin } = Q5_CHART_CONFIG;
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
-    const formatCount = d3.format(",");
+    const formatCount = window.SHARED.formatCount;
     const formatStay = d3.format(".2f");
 
     let selectedMetric = "hospitalisations";
@@ -292,16 +292,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                     showTooltip(d);
                 })
                 .on("mousemove", event => {
-                    tooltip
-                        .style("left", `${event.pageX + 14}px`)
-                        .style("top", `${event.pageY - 64}px`);
+                    window.positionChartTooltip(event, tooltip);
                 })
                 .on("focus", function (event, d) {
                     showTooltip(d);
                     const bounds = this.getBoundingClientRect();
-                    tooltip
-                        .style("left", `${window.scrollX + bounds.left + bounds.width / 2 + 14}px`)
-                        .style("top", `${window.scrollY + bounds.top - 64}px`);
+                    window.positionChartTooltip({
+                        clientX: bounds.left + bounds.width / 2,
+                        clientY: bounds.top,
+                        pageX: window.scrollX + bounds.left + bounds.width / 2,
+                        pageY: window.scrollY + bounds.top
+                    }, tooltip);
                 })
                 .on("blur", () => tooltip.style("opacity", 0))
                 .on("mouseleave", () => tooltip.style("opacity", 0));

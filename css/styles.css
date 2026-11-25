@@ -57,7 +57,6 @@ body {
 }
 
 /* --- SLIDE 1: TITLE PAGE --- */
-#slide-1,
 .slide:nth-child(1) {
     background-color: #b8ccd4;
 }
@@ -171,6 +170,7 @@ body {
 .btn:active {
     transform: scale(0.95);
 }
+
 #slide-chart {
     background-color: #b8ccd4;
 }
@@ -330,7 +330,7 @@ body {
     border-radius: 8px;
     font-size: 13px;
     line-height: 1.5;
-    box-shadow: 0 6px 15px #00000000;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.18);
     opacity: 0;
     transition: opacity 0.15s ease;
     z-index: 100;
@@ -382,8 +382,11 @@ body {
 }
 
 .legend-item {
+    display: inline-flex;
+    align-items: center;
     cursor: pointer;
     transition: opacity 160ms ease;
+    gap: 8px;
 }
 
 .legend-item:focus-visible .legend-label {
@@ -665,12 +668,6 @@ body {
     font-weight: 600;
 }
 
-.legend-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
 .legend-swatch {
     width: 14px;
     height: 14px;
@@ -740,6 +737,11 @@ body:has(#slide-chart) {
     min-height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+body:has(#slide-chart) {
+    background-image: none;
+    background-color: #e2ebf0;
 }
 
 body:has(#slide-chart) .presentation-container,
@@ -851,9 +853,11 @@ body:has(#slide-chart) .slide {
 }
 
 .q4-page-navigation {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 6vw 130px;
+    display: contents;
+}
+
+body:has(.q4-chart-page) .chart-page-content {
+    padding-bottom: 130px;
 }
 
 .heatmap-insights {
@@ -893,12 +897,12 @@ body:has(#slide-chart) .slide {
     padding-left: 20px;
 }
 
-.heatmap-insight-card li + li {
+.heatmap-insight-card li+li {
     margin-top: 10px;
 }
 
 #heatmap-container rect {
-    stroke: #ffffff;
+    stroke: #b8ccd4;
     stroke-width: 1;
     transition: opacity 0.15s ease;
 }
@@ -922,9 +926,9 @@ body:has(#slide-chart) .slide {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background-color: #b5a796; 
+    background-color: #b5a796;
     color: #ffffff;
-    box-shadow: 0 6px 18px #00000000;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
     transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
@@ -974,7 +978,7 @@ body:has(#slide-chart) .slide {
     gap: 8px;
     background-color: #b5a796;
     color: #ffffff;
-    box-shadow: 0 6px 18px #00000000;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
     transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
@@ -1028,8 +1032,8 @@ body:has(#slide-chart) .slide {
 
 .member-card {
     background-color: #ffffff;
-    border-radius: 4px; 
-    border: 2px solid #1d2f43; 
+    border-radius: 4px;
+    border: 2px solid #1d2f43;
     padding: 20px 25px;
     box-shadow: 0 4px 12px rgba(29, 47, 67, 0.08);
     display: flex;
@@ -1392,7 +1396,46 @@ html.page-exit-to-right body {
     }
 }
 
+/* Windows High Contrast Mode: SVG fills are stripped by the
+   user agent; force high-contrast tokens so shapes remain
+   visible and focusable. */
+@media (forced-colors: active) {
+
+    .q2-map-state,
+    #heatmap-container rect,
+    .line-point,
+    .butterfly-bar {
+        fill: CanvasText;
+        stroke: CanvasText;
+    }
+
+    .line-path,
+    .butterfly-zero-line,
+    .butterfly-axis path,
+    .axis path,
+    .axis line {
+        stroke: CanvasText;
+    }
+
+    .chart-card,
+    .q2-map-controls {
+        border: 1px solid CanvasText;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
+    body {
+        animation: none !important;
+    }
+
+    .line-path,
+    .line-point,
+    .butterfly-bar,
+    .q2-map-state,
+    #heatmap-container rect {
+        transition: none !important;
+    }
+
     .landing-page .slide-enter-from-right,
     .landing-page .slide-exit-to-left {
         animation-duration: 1ms;
@@ -1537,7 +1580,7 @@ html.page-exit-to-right body {
 
 .q2-map-state {
     cursor: help;
-    stroke: #ffffff;
+    stroke: #b8ccd4;
     stroke-width: 1.4px;
     vector-effect: non-scaling-stroke;
 }
@@ -1546,6 +1589,29 @@ html.page-exit-to-right body {
     outline: none;
     stroke: #17364b;
     stroke-width: 3px;
+}
+
+.q2-map-label {
+    fill: #17364b;
+    font-size: 11px;
+    font-weight: 700;
+    paint-order: stroke;
+    stroke: rgba(255, 255, 255, 0.85);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    pointer-events: none;
+    user-select: none;
+}
+
+.heatmap-cell-label {
+    fill: #17364b;
+    font-size: 11px;
+    font-weight: 600;
+    paint-order: stroke;
+    stroke: rgba(255, 255, 255, 0.7);
+    stroke-width: 2.5px;
+    stroke-linejoin: round;
+    pointer-events: none;
 }
 
 .q2-map-legend text {
@@ -1585,4 +1651,27 @@ html.page-exit-to-right body {
         min-height: 340px;
         padding: 6px;
     }
+}
+
+.data-download {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 6px 12px;
+    border: 1px solid #284b68;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #284b68;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.data-download:hover {
+    background: #284b68;
+    color: #ffffff;
+}
+
+.data-download:focus-visible {
+    outline: 3px solid #1689be;
+    outline-offset: 2px;
 }

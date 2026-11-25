@@ -30,6 +30,9 @@
 
                 <div id="heatmap-container" class="chart-card"></div>
                 <p class="chart-source">Source: Australian Government, Department of Infrastructure, Transport, Regional Development, Communications and the Arts (2023).</p>
+                <a class="data-download" href="Data/question4.1data.csv" download>
+                    Download source data (CSV)
+                </a>
                 <section class="heatmap-insights" aria-label="What the heatmap reveals">
                     <article class="heatmap-insight-card">
                         <h3>The Hidden Cost of Age</h3>
@@ -40,7 +43,7 @@
                             consistently require shorter hospital stays (averaging 2–4 days), whereas adults aged 65–74
                             require significantly longer care. The situation is most critical for those aged
                             <strong>75 and over</strong>, whose average hospital stay frequently exceeds 10 days,
-                            peaking at an alarming 17.7 days in 2021. This reveals the “hidden severity” of road trauma:
+                            averaging 16.8 days in 2021. This reveals the “hidden severity” of road trauma:
                             older adults may not make up the largest volume of crashes, but when they are hospitalized,
                             the human cost and the strain on our healthcare system are disproportionately massive.
                         </p>
@@ -50,7 +53,7 @@
                         <ul>
                             <li><strong>Younger Adults (17–25):</strong> Average stay of ~4 days.</li>
                             <li><strong>Older Adults (75+):</strong> Average stay climbs to 16.8 days by 2021.</li>
-                            <li><strong>The Takeaway:</strong> In 2021, older adults require nearly <strong>more than
+                            <li><strong>The Takeaway:</strong> In 2021, older adults require <strong>more than
                                     four times</strong> the hospital recovery time compared to young adults (16.8 days
                                 vs. 4.0 days).</li>
                         </ul>
@@ -61,10 +64,13 @@
     </div>
 
     <nav class="q4-page-navigation" aria-label="Page navigation">
-        <a href="Q3.html" class="btn floating-next-btn previous">← Previous</a>
+        <a href="Q3.html" class="btn floating-prev-btn previous">← Previous</a>
         <a href="Q5.html" class="btn floating-next-btn">Next →</a>
     </nav>
     <div id="chart-tooltip" class="tooltip" role="status" aria-live="polite"></div>
+    <script src="js/shared-constant.js"></script>
+    <script src="js/load-data.js"></script>
+    <script src="js/interaction.js"></script>
     <script src="js/Q4chart.js"></script>
 </body>
 

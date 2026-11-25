@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     backButton.classList.add("q4-back-button");
     container.appendChild(backButton);
 
-    d3.csv("Data/question4.1data.csv", d => ({
+    window.loadChartCsv("Data/question4.1data.csv", d => ({
         period: d["6-monthly (#3)"],
         ageGroup: d["Age group"],
         year: +d["Calendar year"],
@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const maxStay = d3.max(periodData, d => d.stay);
         const colorScale = d3.scaleSequential()
             .domain([minStay, maxStay])
-            .interpolator(d3.interpolateReds);
+            .interpolator(t => d3.interpolateReds(0.15 + t * 0.85));
 
         const showTooltip = d => {
             tooltip
@@ -145,9 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 showTooltip(d);
             })
             .on("mousemove", event => {
-                tooltip
-                    .style("left", `${event.pageX + 15}px`)
-                    .style("top", `${event.pageY - 70}px`);
+                window.positionChartTooltip(event, tooltip);
             })
             .on("mouseleave", () => {
                 tooltip.style("opacity", 0);
@@ -155,9 +153,12 @@ document.addEventListener("DOMContentLoaded", () => {
             .on("focus", function (event, d) {
                 showTooltip(d);
                 const bounds = this.getBoundingClientRect();
-                tooltip
-                    .style("left", `${window.scrollX + bounds.left + bounds.width / 2 + 15}px`)
-                    .style("top", `${window.scrollY + bounds.top - 70}px`);
+                window.positionChartTooltip({
+                    clientX: bounds.left + bounds.width / 2,
+                    clientY: bounds.top,
+                    pageX: window.scrollX + bounds.left + bounds.width / 2,
+                    pageY: window.scrollY + bounds.top
+                }, tooltip);
             })
             .on("blur", () => {
                 tooltip.style("opacity", 0);
@@ -176,6 +177,20 @@ document.addEventListener("DOMContentLoaded", () => {
                     backButton.focus();
                 }
             });
+
+        const cellWidth = xScale.bandwidth();
+        const cellHeight = yScale.bandwidth();
+        innerChart.selectAll(".heatmap-cell-label")
+            .data(viewData)
+            .join("text")
+            .attr("class", "heatmap-cell-label")
+            .attr("x", d => xScale(isDrilldown ? d.period : d.year) + cellWidth / 2)
+            .attr("y", d => yScale(d.ageGroup) + cellHeight / 2)
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle")
+            .attr("aria-hidden", "true")
+            .style("pointer-events", "none")
+            .text(d => cellWidth >= 22 && cellHeight >= 14 ? d.stay.toFixed(1) : "");
 
         innerChart.append("g")
             .attr("class", "axis")
@@ -245,7 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .text("Days");
 
         backButton.hidden = !isDrilldown;
-        container.appendChild(backButton);
+        container.insertBefore(backButton, svg.node());
         svg.transition()
             .duration(250)
             .style("opacity", 1);

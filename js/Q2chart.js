@@ -1,6 +1,8 @@
 const Q2_CHART_CONFIG = {
     dataPath: "Data/q2_clean.csv",
-    geoJsonPath: "https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson",
+    // Place states.geojson in the Data/ folder (vendored copy of
+    // https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson)
+    geoJsonPath: "Data/states.geojson",
     years: d3.range(2011, 2022),
     roadUsers: [
         "Car driver, passenger or unknown position",
@@ -69,6 +71,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let selectedRoadUser = "All";
     let mapSvg;
     let mapPaths;
+    let mapLabels;
     let mapZoom;
     let mapLegend;
     let mapGradientStops;
@@ -189,14 +192,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             properties.name || properties.NAME_1;
         const stateCode = geoName && Q2_STATE_CODES_BY_NAME[String(geoName).trim().toLowerCase()];
         if (!stateCode) {
-            throw new Error(`Unable to match GeoJSON feature "${geoName || "unknown"}" to an Australian state or territory.`);
+            return null;
         }
         return stateCode;
     }
 
     try {
         const [sourceRows, geoJson] = await Promise.all([
-            d3.csv(Q2_CHART_CONFIG.dataPath, parseRow),
+            window.loadChartCsv(Q2_CHART_CONFIG.dataPath, parseRow, container.node()),
             d3.json(Q2_CHART_CONFIG.geoJsonPath)
         ]);
 
@@ -207,7 +210,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             throw new Error("The Australia GeoJSON is not a valid FeatureCollection.");
         }
 
-        const features = geoJson.features.map(feature => ({ feature, state: resolveStateCode(feature) }));
+        const features = geoJson.features
+            .map(feature => ({ feature, state: resolveStateCode(feature) }))
+            .filter(d => d.state);
+        if (features.length !== geoJson.features.length) {
+            const skippedCount = geoJson.features.length - features.length;
+            console.warn(`Skipped GeoJSON features with unknown state: ${skippedCount}`);
+        }
         const mappedStates = new Set(features.map(d => d.state));
         const missingStates = Q2_CHART_CONFIG.states.filter(state => !mappedStates.has(state));
         if (missingStates.length) {
@@ -215,7 +224,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const yearlyData = aggregateYearlyCases(sourceRows);
-        const formatCount = d3.format(",");
+        const formatCount = window.SHARED.formatCount;
 
         function renderMap() {
             stateTotals = new Map(Q2_CHART_CONFIG.states.map(state => [state, 0]));
@@ -228,15 +237,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             const maximum = d3.max(stateTotals.values()) || 1;
             const colorScale = d3.scaleSequential()
                 .domain([0, maximum])
-                .interpolator(d3.interpolateBlues);
+                .interpolator(t => d3.interpolateBlues(0.15 + t * 0.85));
             const { width, height } = Q2_CHART_CONFIG;
             selectedYearLabel = selectedYear === "All" ? "All Years" : selectedYear;
             selectedRoadUserLabel = selectedRoadUser === "All" ? "All road users" : selectedRoadUser;
 
             function positionTooltip(event) {
-                tooltip
-                    .style("left", `${event.pageX + 14}px`)
-                    .style("top", `${event.pageY - 64}px`);
+                window.positionChartTooltip(event, tooltip);
             }
 
             function showTooltip(feature, state, event) {
@@ -252,9 +259,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                     positionTooltip(event);
                 } else {
                     const bounds = feature.getBoundingClientRect();
-                    tooltip
-                        .style("left", `${window.scrollX + bounds.left + bounds.width / 2 + 14}px`)
-                        .style("top", `${window.scrollY + bounds.top - 64}px`);
+                    positionTooltip({
+                        clientX: bounds.left + bounds.width / 2,
+                        clientY: bounds.top,
+                        pageX: window.scrollX + bounds.left + bounds.width / 2,
+                        pageY: window.scrollY + bounds.top
+                    });
                 }
             }
 
@@ -296,12 +306,28 @@ document.addEventListener("DOMContentLoaded", async () => {
                     })
                     .on("blur", () => tooltip.style("opacity", 0));
 
+                mapLabels = mapSvg.append("g")
+                    .attr("class", "q2-map-labels")
+                    .attr("aria-hidden", "true")
+                    .selectAll("text")
+                    .data(features)
+                    .join("text")
+                    .attr("class", "q2-map-label")
+                    .attr("x", d => path.centroid(d.feature)[0])
+                    .attr("y", d => path.centroid(d.feature)[1])
+                    .attr("text-anchor", "middle")
+                    .attr("dominant-baseline", "middle")
+                    .text(d => d.state)
+                    .attr("aria-hidden", "true")
+                    .style("pointer-events", "none");
+
                 mapZoom = d3.zoom()
                     .scaleExtent([minMapZoom, maxMapZoom])
                     .extent([[0, 0], [width, height]])
                     .translateExtent([[0, 0], [width, height]])
                     .on("zoom", event => {
                         mapPaths.attr("transform", event.transform);
+                        mapLabels.attr("transform", event.transform);
                         updateZoomControls(event.transform.k);
                     });
                 mapSvg.call(mapZoom).on("dblclick.zoom", null);

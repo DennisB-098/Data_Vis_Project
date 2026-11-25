@@ -33,7 +33,7 @@
                                 <output id="year-slider-value" for="year-slider" aria-live="polite">All</output>
                             </div>
                             <div class="year-slider-wrap">
-                                <input id="year-slider" type="range" min="0" max="11" step="1" value="11"
+                                <input id="year-slider" type="range" min="0" step="1"
                                     aria-label="Select calendar year or all years">
                                 <div id="year-slider-stops" class="year-slider-stops" aria-hidden="true"></div>
                             </div>
@@ -49,12 +49,18 @@
 
                 <div id="butterfly-chart-container" class="chart-card" aria-live="polite"></div>
                 <p class="chart-source">Source: Australian Government, Department of Infrastructure, Transport, Regional Development, Communications and the Arts (2023).</p>
+                <a class="data-download" href="Data/question5.2data.csv" download>
+                    Download source data (CSV)
+                </a>
             </main>
         </div>
     </div>
 
 <a href="Q4.html" class="btn floating-prev-btn previous" aria-label="Previous page">← Previous</a>
     <div id="chart-tooltip" class="tooltip" role="status" aria-live="polite"></div>
+    <script src="js/shared-constant.js"></script>
+    <script src="js/load-data.js"></script>
+    <script src="js/interaction.js"></script>
     <script src="js/Q5chart.js"></script>
 </body>
 

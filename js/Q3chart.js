@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    d3.csv("data/Q3.csv").then(data => {
+    window.loadChartCsv("Data/Q3.csv", d => d, container).then(data => {
         data.forEach(d => {
             d["Sum(Bed days)"] = +d["Sum(Bed days)"];
             d["Sum(Count of cases)"] = +d["Sum(Count of cases)"];
@@ -138,15 +138,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 showTooltip(d);
             })
             .on("mousemove", (event) => {
-                tooltip.style("top", (event.pageY - 70) + "px")
-                    .style("left", (event.pageX + 15) + "px");
+                window.positionChartTooltip(event, tooltip);
             })
             .on("focus", function (event, d) {
                 d3.select(this).attr("fill", "#C0CBCD");
                 showTooltip(d);
                 const bounds = this.getBoundingClientRect();
-                tooltip.style("top", `${window.scrollY + bounds.top - 70}px`)
-                    .style("left", `${window.scrollX + bounds.left + 15}px`);
+                window.positionChartTooltip({
+                    clientX: bounds.left,
+                    clientY: bounds.top,
+                    pageX: window.scrollX + bounds.left,
+                    pageY: window.scrollY + bounds.top
+                }, tooltip);
             })
             .on("mouseout", function (event, d, i) {
                 const index = sortedData.indexOf(d);
