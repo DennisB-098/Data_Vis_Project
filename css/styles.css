@@ -732,6 +732,103 @@ body {
     }
 }
 
+@media (max-width: 700px) {
+    body.q3-page .chart-page-content {
+        padding: 12px 10px 90px;
+        overflow: visible;
+    }
+
+    body.q3-page .chart-header {
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    body.q3-page .chart-header h2 {
+        font-size: 1.25rem;
+        line-height: 1.18;
+    }
+
+    body.q3-page .metric-controls {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 2px;
+        box-sizing: border-box;
+        padding-left: 4px;
+        transform: translateX(-10px);
+    }
+
+    body.q3-page .metric-btn {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 9px 4px;
+        font-size: 0.72rem;
+        line-height: 1.15;
+    }
+
+    body.q3-page #bar-chart-container {
+        height: 430px;
+        min-height: 430px;
+        padding: 8px;
+        overflow: hidden;
+    }
+
+    body.q3-page #bar-chart-container .axis text {
+        font-size: 9px;
+    }
+
+    body.q3-page .table-card {
+        margin-top: 12px;
+        padding: 10px;
+    }
+
+    body.q3-page .table-title {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+
+    body.q3-page .data-table {
+        width: 100%;
+        min-width: 0;
+        table-layout: fixed;
+        font-size: 9px;
+    }
+
+    body.q3-page .data-table th,
+    body.q3-page .data-table td {
+        padding: 6px 3px;
+        overflow-wrap: anywhere;
+        white-space: normal;
+    }
+
+    body.q3-page .data-table th:nth-child(1) {
+        width: 36%;
+    }
+
+    body.q3-page .data-table th:nth-child(2) {
+        width: 22%;
+    }
+
+    body.q3-page .data-table th:nth-child(3) {
+        width: 18%;
+    }
+
+    body.q3-page .data-table th:nth-child(4) {
+        width: 24%;
+    }
+
+    body.q3-page .table-card {
+        overflow-x: hidden;
+    }
+
+    body.q3-page .chart-source,
+    body.q3-page .data-download {
+        font-size: 10px;
+    }
+}
+
 body:has(#slide-chart) {
     height: auto;
     min-height: 100vh;

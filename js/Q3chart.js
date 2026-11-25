@@ -67,8 +67,13 @@ document.addEventListener("DOMContentLoaded", () => {
         container.innerHTML = "";
 
         const rect = container.getBoundingClientRect();
-        const margin = { top: 20, right: 75, bottom: 75, left: 265 };
-        const width = Math.max(300, rect.width - margin.left - margin.right);
+        const isPhone = window.innerWidth <= 700;
+        const margin = isPhone
+            ? { top: 18, right: 10, bottom: 40, left: 125 }
+            : { top: 20, right: 75, bottom: 75, left: 265 };
+        const width = isPhone
+            ? Math.max(160, rect.width - margin.left - margin.right)
+            : Math.max(300, rect.width - margin.left - margin.right);
         const height = Math.max(250, rect.height - margin.top - margin.bottom);
 
         const sortedData = [...rawData].sort((a, b) => d3.descending(a[metric], b[metric]));
@@ -99,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const y = d3.scaleBand()
             .domain(sortedData.map(d => d.Counterparty))
             .range([0, height])
-            .padding(0.28);
+            .padding(isPhone ? 0.22 : 0.28);
 
         svg.append("g")
             .attr("class", "grid")
@@ -113,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         svg.append("text")
             .attr("x", width / 2)
-            .attr("y", height + 42)
+            .attr("y", height + (isPhone ? 30 : 42))
             .attr("fill", "#3b5668")
             .style("text-anchor", "middle")
             .style("font-size", "13px")
