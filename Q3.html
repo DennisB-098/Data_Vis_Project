@@ -37,20 +37,22 @@
                 <div id="bar-chart-container" class="chart-card"></div>
                 <div id="data-table-container" class="chart-card table-card"></div>
                 <p class="chart-source">Source: Australian Government, Department of Infrastructure, Transport, Regional Development, Communications and the Arts (2023).</p>
-                <a class="data-download" href="Data/Q3.csv" download>
+                <a class="data-download" href="data/Q3.csv" download>
                     Download source data (CSV)
                 </a>
+                <nav class="page-navigation" aria-label="Page navigation">
+                    <a href="Q2.html" class="btn floating-prev-btn previous" aria-label="Previous page">← Previous</a>
+                    <a href="Q4.html" class="btn floating-next-btn" aria-label="Next page">Next →</a>
+                </nav>
             </div>
         </div>
     </div>
 
-<a href="Q2.html" class="btn floating-prev-btn previous" aria-label="Previous page">← Previous</a>
-    <a href="Q4.html" class="btn floating-next-btn" aria-label="Next page">Next →</a>
     <div id="chart-tooltip" class="tooltip" role="status" aria-live="polite"></div>
     <script src="js/shared-constant.js"></script>
     <script src="js/load-data.js"></script>
     <script src="js/interaction.js"></script>
-    <script src="js/Q3chart.js"></script>
+    <script src="js/Q3chart.js?v=2"></script>
 </body>
 
 </html>

@@ -58,9 +58,41 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderTable(currentMetric);
             }, 180);
         });
+
+        redrawChartAfterPageEntry();
     }).catch(err => {
         container.innerHTML = `<p>Unable to load Q3.csv. Please ensure you are running the page through a local server (e.g., VS Code Live Server). Error details: ${err}</p>`;
     });
+
+    function redrawChartAfterPageEntry() {
+        const root = document.documentElement;
+        if (
+            !root.classList.contains("page-enter-from-left") &&
+            !root.classList.contains("page-enter-from-right")
+        ) {
+            return;
+        }
+
+        let rerendered = false;
+        let fallbackTimer;
+        const rerender = () => {
+            if (rerendered) {
+                return;
+            }
+            rerendered = true;
+            window.clearTimeout(fallbackTimer);
+            document.body.removeEventListener("animationend", handleAnimationEnd);
+            renderChart(currentMetric, { animate: false });
+        };
+        const handleAnimationEnd = event => {
+            if (event.target === document.body) {
+                rerender();
+            }
+        };
+
+        document.body.addEventListener("animationend", handleAnimationEnd);
+        fallbackTimer = window.setTimeout(rerender, 600);
+    }
 
     function renderChart(metric, options = {}) {
         const animate = options.animate !== false;

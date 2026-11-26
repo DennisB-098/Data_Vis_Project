@@ -8,13 +8,15 @@
     container.html("").append("p").attr("class", "chart-error").text(message);
   }
 
-  function showTooltip(event, datum) {
+  function showTooltip(event, datum, average) {
     const previousYear = dataByYear.get(datum.year - 1);
     const yearChange = previousYear
       ? d3.format("+.1%")((datum.hospitalisations - previousYear.hospitalisations) / previousYear.hospitalisations)
       : "First year in series";
+    const averageDifference = Math.round(datum.hospitalisations - average);
+    const differenceLabel = `${averageDifference >= 0 ? "+" : ""}${formatValue(averageDifference)}`;
     tooltip
-      .html(`<strong>${datum.year}</strong><br>${formatValue(datum.hospitalisations)} hospitalisations<br><span>Year-on-year: ${yearChange}</span>`)
+      .html(`<strong>${datum.year}</strong><br>${formatValue(datum.hospitalisations)} hospitalisations<br><span>${differenceLabel} vs 11-year average</span><br><span>Year-on-year: ${yearChange}</span>`)
       .style("opacity", 1);
     window.positionChartTooltip(event, tooltip);
   }
@@ -60,14 +62,16 @@
         .style("width", "100%")
         .style("height", "auto")
         .attr("role", "group")
-        .attr("aria-label", "Line chart of annual road injury hospitalisations from 2011 to 2021");
+        .attr("aria-label", "Lollipop chart comparing annual road injury hospitalisations with the 11-year average from 2011 to 2021");
       const plotWidth = width - margin.left - margin.right;
       const plotHeight = height - margin.top - margin.bottom;
       const x = d3.scaleLinear()
         .domain(d3.extent(data, d => d.year))
         .range([0, plotWidth]);
+      const differences = data.map(d => d.hospitalisations - average);
+      const [minimumDifference, maximumDifference] = d3.extent(differences);
       const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.hospitalisations) * 1.12])
+        .domain([Math.min(0, minimumDifference), Math.max(0, maximumDifference)])
         .nice()
         .range([plotHeight, 0]);
       const plot = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
@@ -80,12 +84,12 @@
         .attr("class", "average-line")
         .attr("x1", 0)
         .attr("x2", plotWidth)
-        .attr("y1", y(average))
-        .attr("y2", y(average));
+        .attr("y1", y(0))
+        .attr("y2", y(0));
       plot.append("text")
         .attr("class", "average-label")
         .attr("x", 8)
-        .attr("y", y(average) - 8)
+        .attr("y", y(0) - 8)
         .text(`${data.length}-year average: ${formatValue(Math.round(average))}`);
 
       plot.append("g")
@@ -95,32 +99,31 @@
 
       plot.append("g")
         .attr("class", "axis")
-        .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format("~s")).tickSizeOuter(0));
+        .call(d3.axisLeft(y).ticks(5).tickFormat(value =>
+          value > 0 ? `+${d3.format("~s")(value)}` : d3.format("~s")(value)
+        ).tickSizeOuter(0));
 
       svg.append("text")
         .attr("class", "chart-label")
         .attr("text-anchor", "middle")
         .attr("transform", `translate(20,${margin.top + plotHeight / 2}) rotate(-90)`)
-        .text("Hospitalisations");
+        .text("Difference from average");
 
-      const line = d3.line()
-        .x(d => x(d.year))
-        .y(d => y(d.hospitalisations))
-        .curve(d3.curveMonotoneX);
-
-      const linePath = plot.append("path")
-        .datum(data)
-        .attr("class", "line-path")
-        .attr("d", line);
-
-      const pathLength = linePath.node().getTotalLength();
-      linePath
-        .attr("stroke-dasharray", `${pathLength} ${pathLength}`)
-        .attr("stroke-dashoffset", pathLength)
-        .transition()
-        .duration(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900)
+      const animationDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700;
+      const stems = plot.selectAll(".lollipop-stem")
+        .data(data)
+        .join("line")
+        .attr("class", "lollipop-stem")
+        .classed("is-below-average", d => d.hospitalisations < average)
+        .classed("is-peak", d => d.year === peak.year)
+        .attr("x1", d => x(d.year))
+        .attr("x2", d => x(d.year))
+        .attr("y1", y(0))
+        .attr("y2", y(0));
+      stems.transition()
+        .duration(animationDuration)
         .ease(d3.easeCubicOut)
-        .attr("stroke-dashoffset", 0);
+        .attr("y2", d => y(d.hospitalisations - average));
 
       const focusLine = plot.append("line")
         .attr("class", "chart-focus-line")
@@ -132,18 +135,23 @@
         .data(data)
         .join("circle")
         .attr("class", "line-point")
+        .classed("is-below-average", d => d.hospitalisations < average)
         .classed("is-peak", d => d.year === peak.year)
         .attr("cx", d => x(d.year))
-        .attr("cy", d => y(d.hospitalisations))
+        .attr("cy", y(0))
         .attr("r", 6)
         .attr("tabindex", 0)
         .attr("role", "img")
-        .attr("aria-label", d => `${d.year}: ${formatValue(d.hospitalisations)} hospitalisations`)
+        .attr("aria-label", d => {
+          const difference = Math.round(d.hospitalisations - average);
+          const sign = difference >= 0 ? "+" : "";
+          return `${d.year}: ${formatValue(d.hospitalisations)} hospitalisations, ${sign}${formatValue(difference)} versus average`;
+        })
         .on("pointerenter", function (event, datum) {
           activatePoint(datum);
-          showTooltip(event, datum);
+          showTooltip(event, datum, average);
         })
-        .on("pointermove", showTooltip)
+        .on("pointermove", (event, datum) => showTooltip(event, datum, average))
         .on("pointerleave", () => {
           clearActivePoint();
         })
@@ -155,13 +163,14 @@
             clientY: bounds.top,
             pageX: window.scrollX + bounds.left + bounds.width / 2,
             pageY: window.scrollY + bounds.top
-          }, datum);
+          }, datum, average);
         })
         .on("blur", () => {
           clearActivePoint();
         });
 
       function activatePoint(datum) {
+        stems.classed("is-active", d => d.year === datum.year);
         points
           .classed("is-active", d => d.year === datum.year)
           .attr("r", d => d.year === datum.year ? 8 : 6);
@@ -172,10 +181,16 @@
       }
 
       function clearActivePoint() {
+        stems.classed("is-active", false);
         points.classed("is-active", false).attr("r", 6);
         focusLine.style("opacity", 0);
         tooltip.style("opacity", 0);
       }
+
+      points.transition()
+        .duration(animationDuration)
+        .ease(d3.easeCubicOut)
+        .attr("cy", d => y(d.hospitalisations - average));
     }
 
     renderChart();

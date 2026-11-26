@@ -238,7 +238,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             const colorScale = d3.scaleSequential()
                 .domain([0, maximum])
                 .interpolator(t => d3.interpolateBlues(0.15 + t * 0.85));
-            const { width, height } = Q2_CHART_CONFIG;
+            const { width } = Q2_CHART_CONFIG;
+            const mobileMapLayout = window.matchMedia("(max-width: 700px)").matches;
+            const height = mobileMapLayout ? 1000 : Q2_CHART_CONFIG.height;
+            const mapViewportBottom = mobileMapLayout ? 700 : Q2_CHART_CONFIG.height - 150;
             selectedYearLabel = selectedYear === "All" ? "All Years" : selectedYear;
             selectedRoadUserLabel = selectedRoadUser === "All" ? "All road users" : selectedRoadUser;
 
@@ -281,11 +284,24 @@ document.addEventListener("DOMContentLoaded", async () => {
                     .text("Australian hospitalised road crash cases choropleth");
                 mapSvg.append("desc").attr("id", "q2-map-description");
 
+                mapSvg.append("defs")
+                    .append("clipPath")
+                    .attr("id", "q2-map-viewport-clip")
+                    .attr("clipPathUnits", "userSpaceOnUse")
+                    .append("rect")
+                    .attr("width", width)
+                    .attr("height", mapViewportBottom);
+                const mapViewport = mapSvg.append("g")
+                    .attr("clip-path", "url(#q2-map-viewport-clip)");
+
                 const projection = d3.geoMercator()
-                    .fitExtent([[24, 48], [width - 24, height - 108]], geoJson);
+                    .fitExtent([
+                        [24, mobileMapLayout ? 260 : 48],
+                        [width - 24, mapViewportBottom]
+                    ], geoJson);
                 const path = d3.geoPath(projection);
 
-                mapPaths = mapSvg.append("g")
+                mapPaths = mapViewport.append("g")
                     .attr("class", "q2-map-states")
                     .selectAll("path")
                     .data(features)
@@ -306,7 +322,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     })
                     .on("blur", () => tooltip.style("opacity", 0));
 
-                mapLabels = mapSvg.append("g")
+                mapLabels = mapViewport.append("g")
                     .attr("class", "q2-map-labels")
                     .attr("aria-hidden", "true")
                     .selectAll("text")
@@ -323,8 +339,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 mapZoom = d3.zoom()
                     .scaleExtent([minMapZoom, maxMapZoom])
-                    .extent([[0, 0], [width, height]])
-                    .translateExtent([[0, 0], [width, height]])
+                    .extent([[0, 0], [width, mapViewportBottom]])
+                    .translateExtent([[0, 0], [width, mapViewportBottom]])
                     .on("zoom", event => {
                         mapPaths.attr("transform", event.transform);
                         mapLabels.attr("transform", event.transform);
@@ -333,9 +349,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 mapSvg.call(mapZoom).on("dblclick.zoom", null);
                 updateZoomControls(minMapZoom);
 
-                const legendWidth = 250;
+                const legendWidth = mobileMapLayout ? 400 : 250;
                 const legendX = (width - legendWidth) / 2;
-                const legendY = height - 57;
+                const legendY = mobileMapLayout ? height - 120 : height - 82;
                 const gradient = mapSvg.append("defs")
                     .append("linearGradient")
                     .attr("id", "q2-map-gradient");
@@ -353,28 +369,28 @@ document.addEventListener("DOMContentLoaded", async () => {
                     .attr("opacity", 0);
                 mapLegend.append("text")
                     .attr("x", legendX)
-                    .attr("y", legendY - 8)
+                    .attr("y", legendY - (mobileMapLayout ? 14 : 8))
                     .text("Hospitalisations");
                 mapLegend.append("rect")
                     .attr("x", legendX)
                     .attr("y", legendY)
                     .attr("width", legendWidth)
-                    .attr("height", 12)
+                    .attr("height", mobileMapLayout ? 16 : 12)
                     .attr("rx", 4)
                     .attr("fill", "url(#q2-map-gradient)");
                 mapLegend.append("text")
                     .attr("class", "q2-map-legend-min")
                     .attr("x", legendX)
-                    .attr("y", legendY + 28);
+                    .attr("y", legendY + (mobileMapLayout ? 54 : 42));
                 mapLegend.append("text")
                     .attr("class", "q2-map-legend-mid")
                     .attr("x", legendX + legendWidth / 2)
-                    .attr("y", legendY + 28)
+                    .attr("y", legendY + (mobileMapLayout ? 54 : 42))
                     .attr("text-anchor", "middle");
                 mapLegend.append("text")
                     .attr("class", "q2-map-legend-max")
                     .attr("x", legendX + legendWidth)
-                    .attr("y", legendY + 28)
+                    .attr("y", legendY + (mobileMapLayout ? 54 : 42))
                     .attr("text-anchor", "end");
             }
 
